@@ -27,8 +27,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Step 1 of the flow: is anyone logged in?
-/// login/signup -> choose role -> student home OR tutor home
+
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -50,7 +49,6 @@ class AuthGate extends StatelessWidget {
   }
 }
 
-/// Step 2: read users/{uid}.role from Firestore and route accordingly.
 class RoleGate extends StatelessWidget {
   const RoleGate({super.key});
 
@@ -71,8 +69,7 @@ class RoleGate extends StatelessWidget {
         if (role == 'tutor') {
           return const TutorDashboardScreen();
         } else if (role == 'student') {
-          // Not your side to build — just a placeholder so this file
-          // still runs standalone even if a student account logs in.
+   
           return const Scaffold(body: Center(child: Text('Student home (Member A)')));
         } else {
           // No role picked yet -> show role selection screen

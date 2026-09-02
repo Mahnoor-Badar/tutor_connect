@@ -30,9 +30,7 @@ class _EditTutorProfileScreenState extends State<EditTutorProfileScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    // Plug in image_picker + Firebase Storage upload here.
-    // Left as a TODO since your team hasn't confirmed the storage
-    // provider yet — the field below just needs a final download URL.
+   
   }
 
   Future<void> _save() async {
