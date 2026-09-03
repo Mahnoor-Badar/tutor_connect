@@ -19,9 +19,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'TutorConnect',
-      home: const AuthGate(),
+      home: AuthGate(),
     );
   }
 }
@@ -37,28 +37,37 @@ class AuthGate extends StatelessWidget {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        if (!snap.hasData) {
-          // return const LoginScreen();
+        
+        final user = snap.data;
+        if (user == null) {
+          // Replace with your actual LoginScreen widget/import when ready
           return const Scaffold(body: Center(child: Text('Login screen goes here')));
         }
-        return const RoleGate();
+        
+        // Pass the user ID safely down to RoleGate
+        return RoleGate(uid: user.uid);
       },
     );
   }
 }
 
 class RoleGate extends StatelessWidget {
-  const RoleGate({super.key});
+  final String uid;
+  const RoleGate({super.key, required this.uid});
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
       builder: (context, snap) {
-        if (!snap.hasData) {
+        // Handle connection waiting state
+        if (snap.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+
+        // Handle errors or non-existent user documents safely
+        if (snap.hasError || !snap.hasData || !snap.data!.exists) {
+          return const Scaffold(body: Center(child: Text('Choose role screen goes here')));
         }
 
         final data = snap.data!.data() as Map<String, dynamic>?;
@@ -69,7 +78,6 @@ class RoleGate extends StatelessWidget {
         } else if (role == 'student') {
           return const Scaffold(body: Center(child: Text('Student home (Member A)')));
         } else {
-          // No role picked yet -> show role selection screen
           return const Scaffold(body: Center(child: Text('Choose role screen goes here')));
         }
       },
