@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'find_tutor_screen.dart';
+import 'my_sessions_screen.dart';
+import 'student_profile_screen.dart';
 
 class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
@@ -76,7 +78,14 @@ class StudentDashboardScreen extends StatelessWidget {
                   child: _ActionCard(
                     icon: Icons.calendar_month,
                     title: 'My Sessions',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MySessionsScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -141,6 +150,16 @@ class StudentDashboardScreen extends StatelessWidget {
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
+        onTap: (index) {
+          if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StudentProfileScreen(),
+              ),
+            );
+          }
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
