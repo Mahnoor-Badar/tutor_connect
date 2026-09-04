@@ -1,38 +1,53 @@
 import 'package:flutter/material.dart';
-import 'book_session_screen.dart';
+import '../../models/tutor_profile.dart';
+import '../booking_screen.dart';
 
 class TutorProfileScreen extends StatelessWidget {
-  final String tutorName;
-  final String subject;
-  final String rating;
+  final TutorProfile tutor;
 
   const TutorProfileScreen({
     super.key,
-    required this.tutorName,
-    required this.subject,
-    required this.rating,
+    required this.tutor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tutor Profile')),
+      appBar: AppBar(
+        title: const Text('Tutor Profile'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const CircleAvatar(radius: 55, child: Icon(Icons.person, size: 55)),
+            CircleAvatar(
+              radius: 55,
+              backgroundImage: tutor.photoUrl.isNotEmpty
+                  ? NetworkImage(tutor.photoUrl)
+                  : null,
+              child: tutor.photoUrl.isEmpty
+                  ? const Icon(Icons.person, size: 55)
+                  : null,
+            ),
 
             const SizedBox(height: 15),
 
             Text(
-              tutorName,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              tutor.name,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
 
             const SizedBox(height: 8),
 
-            Text(subject, style: const TextStyle(fontSize: 17)),
+            if (tutor.city.isNotEmpty)
+              Text(
+                tutor.city,
+                style: const TextStyle(fontSize: 16),
+              ),
 
             const SizedBox(height: 8),
 
@@ -41,7 +56,15 @@ class TutorProfileScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.star),
                 const SizedBox(width: 5),
-                Text(rating, style: const TextStyle(fontSize: 16)),
+                Text(
+                  tutor.avgRating.toStringAsFixed(1),
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  '(${tutor.reviewCount} reviews)',
+                  style: const TextStyle(color: Colors.grey),
+                ),
               ],
             ),
 
@@ -49,21 +72,22 @@ class TutorProfileScreen extends StatelessWidget {
 
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'About Tutor',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Experienced peer tutor available to help students '
-                      'understand concepts and improve their skills.',
+                    Text(
+                      tutor.bio.isNotEmpty
+                          ? tutor.bio
+                          : 'No bio available.',
                     ),
                   ],
                 ),
@@ -74,19 +98,28 @@ class TutorProfileScreen extends StatelessWidget {
 
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Teaching Subject',
+                      'Teaching Subjects',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(subject),
+                    const SizedBox(height: 12),
+
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: tutor.subjects.map((subject) {
+                        return Chip(
+                          label: Text(subject),
+                        );
+                      }).toList(),
+                    ),
                   ],
                 ),
               ),
@@ -102,9 +135,8 @@ class TutorProfileScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BookSessionScreen(
-                        tutorName: tutorName,
-                        subject: subject,
+                      builder: (context) => BookingScreen(
+                        tutor: tutor,
                       ),
                     ),
                   );

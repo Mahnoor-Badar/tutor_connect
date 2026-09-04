@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'find_tutor_screen.dart';
 import 'my_sessions_screen.dart';
 import 'student_profile_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
@@ -10,14 +11,26 @@ class StudentDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TutorConnect'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
-        ],
-      ),
+  title: const Text('TutorConnect'),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.notifications_outlined),
+      onPressed: () {},
+    ),
+
+    IconButton(
+      icon: const Icon(Icons.logout),
+      tooltip: 'Logout',
+      onPressed: () async {
+        await FirebaseAuth.instance.signOut();
+
+        if (context.mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      },
+    ),
+  ],
+),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
