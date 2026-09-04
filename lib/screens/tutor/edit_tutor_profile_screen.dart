@@ -76,9 +76,7 @@ class _EditTutorProfileScreenState
     super.dispose();
   }
 
-  // ============================================================
   // IMAGE PICKER + FIREBASE STORAGE
-  // ============================================================
 
   Future<void> _pickPhoto() async {
     if (_isUploading || _isSaving) return;
@@ -153,9 +151,7 @@ class _EditTutorProfileScreenState
     }
   }
 
-  // ============================================================
   // SUBJECT MANAGEMENT
-  // ============================================================
 
   void _addSubject() {
     final subject = _subjectController.text.trim();
@@ -186,9 +182,7 @@ class _EditTutorProfileScreenState
     });
   }
 
-  // ============================================================
   // SAVE PROFILE
-  // ============================================================
 
   Future<void> _saveProfile() async {
     if (_isSaving || _isUploading) {
@@ -267,9 +261,7 @@ class _EditTutorProfileScreenState
     }
   }
 
-  // ============================================================
   // HELPER
-  // ============================================================
 
   void _showMessage(String message) {
     if (!mounted) return;
@@ -281,9 +273,7 @@ class _EditTutorProfileScreenState
     );
   }
 
-  // ============================================================
   // UI
-  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -302,9 +292,7 @@ class _EditTutorProfileScreenState
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // ==================================================
             // PROFILE PHOTO
-            // ==================================================
 
             Center(
               child: GestureDetector(
@@ -370,9 +358,7 @@ class _EditTutorProfileScreenState
 
             const SizedBox(height: 20),
 
-            // ==================================================
             // NAME
-            // ==================================================
 
             TextFormField(
               controller: _nameController,
@@ -394,9 +380,7 @@ class _EditTutorProfileScreenState
 
             const SizedBox(height: 16),
 
-            // ==================================================
             // CITY
-            // ==================================================
 
             TextFormField(
               controller: _cityController,
@@ -418,9 +402,7 @@ class _EditTutorProfileScreenState
 
             const SizedBox(height: 16),
 
-            // ==================================================
             // BIO
-            // ==================================================
 
             TextFormField(
               controller: _bioController,
@@ -520,9 +502,7 @@ class _EditTutorProfileScreenState
 
             const SizedBox(height: 28),
 
-            // ==================================================
             // SAVE BUTTON
-            // ==================================================
 
             SizedBox(
               height: 50,
