@@ -3,6 +3,6 @@ import 'package:tutor_connect/main.dart';
 
 void main() {
   testWidgets('TutorConnect app loads', (WidgetTester tester) async {
-    await tester.pumpWidget(const StudentApp());
+    await tester.pumpWidget(const MyApp());
   });
 }
