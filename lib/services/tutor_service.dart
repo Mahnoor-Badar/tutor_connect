@@ -4,30 +4,34 @@ import '../models/tutor_profile.dart';
 import '../models/booking.dart';
 import '../models/review.dart';
 
-
 class TutorService {
   final _db = FirebaseFirestore.instance;
   String get _uid => FirebaseAuth.instance.currentUser!.uid;
 
   // ---------- 1. ROLE MANAGEMENT ----------
   Future<void> setRole(String role) async {
-    await _db.collection('users').doc(_uid).set(
-      {'role': role, 'createdAt': FieldValue.serverTimestamp()},
-      SetOptions(merge: true),
-    );
+    await _db.collection('users').doc(_uid).set({
+      'role': role,
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   // ---------- 2. TUTOR PROFILE CRUD ----------
   Future<void> createOrUpdateProfile(TutorProfile profile) async {
-    await _db.collection('tutors').doc(_uid).set(
-          profile.toMap(),
-          SetOptions(merge: true),
-        );
+    await _db
+        .collection('tutors')
+        .doc(_uid)
+        .set(profile.toMap(), SetOptions(merge: true));
   }
 
   Stream<TutorProfile?> watchOwnProfile() {
-    return _db.collection('tutors').doc(_uid).snapshots().map(
-          (doc) => doc.exists ? TutorProfile.fromMap(doc.id, doc.data()!) : null,
+    return _db
+        .collection('tutors')
+        .doc(_uid)
+        .snapshots()
+        .map(
+          (doc) =>
+              doc.exists ? TutorProfile.fromMap(doc.id, doc.data()!) : null,
         );
   }
 
@@ -65,10 +69,7 @@ class TutorService {
           throw Exception('You already have a session at this time.');
         }
 
-        tx.update(ref, {
-          'status': 'accepted',
-          'tutorMessage': tutorMessage,
-        });
+        tx.update(ref, {'status': 'accepted', 'tutorMessage': tutorMessage});
 
         // Monthly session -> auto-create the recurring entries now,
         // so the student/tutor never has to book each one manually.
@@ -82,7 +83,9 @@ class TutorService {
   }
 
   Future<void> _generateMonthlyOccurrences(
-      String parentId, Map<String, dynamic> data) async {
+    String parentId,
+    Map<String, dynamic> data,
+  ) async {
     final batch = _db.batch();
     final startDate = (data['date'] as Timestamp).toDate();
     for (int i = 1; i <= 4; i++) {
@@ -140,7 +143,14 @@ class TutorService {
         .map((q) => q.docs.map(Review.fromDoc).toList());
   }
 
-  // ---------- 6. TRANSACTION & PAYMENT ----------
+  // ----------6. MARK SESSION COMPLETED ----------
+  Future<void> markSessionCompleted({required String bookingId}) async {
+    await _db.collection('bookings').doc(bookingId).update({
+      'status': 'completed',
+    });
+  }
+
+  // ---------- 7. TRANSACTION & PAYMENT ----------
   /// Marks a booking Paid AND creates the linked financial record,
   /// exactly as the chart specifies: "Mark Paid + Create Transactions,
   /// setting session to 'Paid' -> Linked financial record".

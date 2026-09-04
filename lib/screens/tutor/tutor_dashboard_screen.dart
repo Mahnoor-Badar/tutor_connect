@@ -254,14 +254,76 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
           itemBuilder: (context, i) {
             final s = sessions[i];
 
-            return ListTile(
-              title: Text('${s.subject} • ${s.studentName}'),
-              subtitle: Text(
-                '${s.date.toLocal().toString().split(' ')[0]}  ${s.time}',
+            return Card(
+              margin: const EdgeInsets.all(8),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${s.subject} • ${s.studentName}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Text(
+                      '${s.date.toLocal().toString().split(' ')[0]}  ${s.time}',
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Row(
+                      children: [
+                        const Text(
+                          'Status: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const Chip(label: Text('Accepted')),
+                      ],
+                    ),
+
+                    Row(
+                      children: [
+                        const Text(
+                          'Payment: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Chip(label: Text(s.isPaid ? 'Paid' : 'Unpaid')),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Mark Completed button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _handleCompleteSession(s),
+                        icon: const Icon(Icons.check_circle_outline),
+                        label: const Text('Mark Session Completed'),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Mark Paid button
+                    if (!s.isPaid)
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _handleMarkPaid(s),
+                          icon: const Icon(Icons.payment),
+                          label: const Text('Mark as Paid'),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-              trailing: s.isPaid
-                  ? const Chip(label: Text('Paid'))
-                  : const Chip(label: Text('Unpaid')),
             );
           },
         );
@@ -269,6 +331,107 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     );
   }
 
+  Future<void> _handleCompleteSession(Booking session) async {
+    try {
+      await _service.markSessionCompleted(bookingId: session.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session marked as completed.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to complete session: $e')),
+        );
+      }
+    }
+  }
+
+Future<void> _handleMarkPaid(Booking session) async {
+  final amountController = TextEditingController();
+  String? errorText;
+
+  final amount = await showDialog<double>(
+    context: context,
+    builder: (dialogContext) {
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Mark Session as Paid'),
+            content: TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: InputDecoration(
+                labelText: 'Payment amount',
+                hintText: 'e.g. 1000',
+                prefixText: 'Rs. ',
+                border: const OutlineInputBorder(),
+                errorText: errorText,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final value = double.tryParse(
+                    amountController.text.trim(),
+                  );
+
+                  if (value == null || value <= 0) {
+                    setDialogState(() {
+                      errorText = 'Please enter a valid amount.';
+                    });
+                    return;
+                  }
+
+                  Navigator.pop(dialogContext, value);
+                },
+                child: const Text('Confirm'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  amountController.dispose();
+
+  if (amount == null) return;
+
+  try {
+    await _service.markSessionPaid(
+      bookingId: session.id,
+      studentId: session.studentId,
+      amount: amount,
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Payment marked successfully.'),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to mark payment: $e'),
+      ),
+    );
+  }
+}
   // ------------------------------------------------------------
   // History tab
   // ------------------------------------------------------------
