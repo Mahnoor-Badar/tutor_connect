@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../../models/tutor_profile.dart';
 import 'tutor_profile_screen.dart';
 
@@ -12,39 +14,6 @@ class FindTutorScreen extends StatefulWidget {
 class _FindTutorScreenState extends State<FindTutorScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  final List<TutorProfile> _tutors = [
-    TutorProfile(
-      uid: 'tutor1',
-      name: 'Ali Khan',
-      bio: 'Experienced mathematics tutor.',
-      subjects: ['Mathematics'],
-      city: 'Lahore',
-      photoUrl: '',
-      avgRating: 4.8,
-      reviewCount: 12,
-    ),
-    TutorProfile(
-      uid: 'tutor2',
-      name: 'Sara Ahmed',
-      bio: 'Programming tutor specializing in Flutter and Dart.',
-      subjects: ['Programming', 'Flutter'],
-      city: 'Islamabad',
-      photoUrl: '',
-      avgRating: 4.7,
-      reviewCount: 9,
-    ),
-    TutorProfile(
-      uid: 'tutor3',
-      name: 'Ahmed Raza',
-      bio: 'Physics tutor for school and university students.',
-      subjects: ['Physics'],
-      city: 'Karachi',
-      photoUrl: '',
-      avgRating: 4.9,
-      reviewCount: 15,
-    ),
-  ];
-
   String _searchText = '';
 
   @override
@@ -53,17 +22,17 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
 
     _searchController.addListener(() {
       setState(() {
-        _searchText = _searchController.text.toLowerCase();
+        _searchText = _searchController.text.toLowerCase().trim();
       });
     });
   }
 
-  List<TutorProfile> get _filteredTutors {
+  List<TutorProfile> _filterTutors(List<TutorProfile> tutors) {
     if (_searchText.isEmpty) {
-      return _tutors;
+      return tutors;
     }
 
-    return _tutors.where((tutor) {
+    return tutors.where((tutor) {
       final name = tutor.name.toLowerCase();
       final subjects = tutor.subjects.join(' ').toLowerCase();
       final city = tutor.city.toLowerCase();
@@ -82,8 +51,6 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tutors = _filteredTutors;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Find a Tutor'),
@@ -125,21 +92,60 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
             const SizedBox(height: 15),
 
             Expanded(
-              child: tutors.isEmpty
-                  ? const Center(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('tutors')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Text(
+                          'Unable to load tutors.\n\n${snapshot.error}',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
+                  final tutors = snapshot.data?.docs.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+
+                        return TutorProfile.fromMap(
+                          doc.id,
+                          data,
+                        );
+                      }).toList() ??
+                      [];
+
+                  final filteredTutors = _filterTutors(tutors);
+
+                  if (filteredTutors.isEmpty) {
+                    return const Center(
                       child: Text(
                         'No tutors found.',
                         style: TextStyle(fontSize: 16),
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: tutors.length,
-                      itemBuilder: (context, index) {
-                        return _TutorCard(
-                          tutor: tutors[index],
-                        );
-                      },
-                    ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: filteredTutors.length,
+                    itemBuilder: (context, index) {
+                      return _TutorCard(
+                        tutor: filteredTutors[index],
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -203,10 +209,13 @@ class _TutorCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(tutor.avgRating.toStringAsFixed(1)),
                       const SizedBox(width: 8),
-                      Text(
-                        tutor.city,
-                        style: const TextStyle(
-                          color: Colors.grey,
+                      Expanded(
+                        child: Text(
+                          tutor.city,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
