@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'role_selection_screen.dart';
+import '../auth/role_selection_screen.dart';
+
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -16,7 +17,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+  //bool _obscureConfirmPassword = true;
   Future<void> _signup() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -40,22 +41,22 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() {
       _isLoading = true;
     });
+try {
+  await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    email: email,
+    password: password,
+  );
 
-    try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+  if (!mounted) return;
 
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
-      );
-
-      Navigator.pop(context);
-    } on FirebaseAuthException catch (e) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const RoleSelectionScreen(),
+    ),
+  );
+}
+     on FirebaseAuthException catch (e) {
       if (!mounted) return;
 
       String message = 'Signup failed';

@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../student/student_dashboard_screen.dart';
+import '../tutor/tutor_dashboard_screen.dart';
+
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
 
@@ -25,6 +28,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     });
 
     try {
+      // Save user's role in Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -37,9 +41,22 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
       if (!mounted) return;
 
-      _showMessage('$role role selected');
-
-      // Dashboard navigation will be added later.
+      // Navigate according to selected role
+      if (role == 'tutor') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const TutorDashboardScreen(),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const StudentDashboardScreen(),
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
 

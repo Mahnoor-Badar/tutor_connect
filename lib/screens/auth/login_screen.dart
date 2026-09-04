@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 //import 'package:cloud_firestore/cloud_firestore.dart';
-import '../student/student_dashboard_screen.dart';
 
 import 'signup_screen.dart';
 
@@ -35,12 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const StudentDashboardScreen()),
-      );
+  
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
 
