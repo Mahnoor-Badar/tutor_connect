@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'screens/auth/role_selection_screen.dart';
 
 // Screen Imports
 import 'screens/auth/login_screen.dart';
@@ -12,9 +13,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -26,10 +25,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'TutorConnect',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
-      ),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
       home: const AuthGate(),
     );
   }
@@ -69,7 +65,10 @@ class RoleGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .snapshots(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -78,10 +77,16 @@ class RoleGate extends StatelessWidget {
         }
 
         // Fallback if user doc doesn't exist or hasn't loaded yet
-        if (snap.hasError || !snap.hasData || !snap.data!.exists) {
+        if (snap.hasError) {
           return const Scaffold(
-            body: Center(child: Text('Role selection pending...')),
+            body: Center(
+              child: Text('Something went wrong while loading your profile.'),
+            ),
           );
+        }
+
+        if (!snap.hasData || !snap.data!.exists) {
+          return const RoleSelectionScreen();
         }
 
         final data = snap.data!.data() as Map<String, dynamic>?;
