@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/tutor_profile.dart';
 import '../services/booking_service.dart';
 import '../services/holiday_service.dart';
+
 class BookingScreen extends StatefulWidget {
   final TutorProfile tutor;
 
@@ -332,32 +333,28 @@ class _BookingScreenState extends State<BookingScreen> {
                   ),
                 ),
 
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('One-time'),
-                  value: 'runtime',
+                RadioGroup<String>(
                   groupValue: _sessionType,
                   onChanged: (value) {
                     if (value == null) return;
-
                     setState(() {
                       _sessionType = value;
                     });
                   },
-                ),
-
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Monthly (weekly, 4 sessions)'),
-                  value: 'monthly',
-                  groupValue: _sessionType,
-                  onChanged: (value) {
-                    if (value == null) return;
-
-                    setState(() {
-                      _sessionType = value;
-                    });
-                  },
+                  child: Column(
+                    children: const [
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('One-time'),
+                        value: 'runtime',
+                      ),
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('Monthly (weekly, 4 sessions)'),
+                        value: 'monthly',
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 12),

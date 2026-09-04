@@ -185,8 +185,7 @@ class _SessionCard extends StatelessWidget {
                     horizontal: 10,
                     vertical: 6,
                   ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
