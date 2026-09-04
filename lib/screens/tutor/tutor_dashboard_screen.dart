@@ -1,6 +1,6 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'edit_tutor_profile_screen.dart';
 
 import '../../models/booking.dart';
 import '../../models/review.dart';
@@ -26,6 +26,19 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
           // Logout button
           actions: [
+            IconButton(
+              icon: const Icon(Icons.person_outline),
+              tooltip: 'My Profile',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EditTutorProfileScreen(),
+                  ),
+                );
+              },
+            ),
+
             IconButton(
               icon: const Icon(Icons.logout),
               tooltip: 'Logout',
@@ -70,9 +83,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
       stream: _service.watchIncomingRequests(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snap.hasError) {
@@ -90,9 +101,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
         final requests = snap.data ?? [];
 
         if (requests.isEmpty) {
-          return const Center(
-            child: Text('No pending requests'),
-          );
+          return const Center(child: Text('No pending requests'));
         }
 
         return ListView.builder(
@@ -109,9 +118,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                   children: [
                     Text(
                       '${b.studentName} • ${b.subject}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       '${b.date.toLocal().toString().split(' ')[0]}  ${b.time}',
@@ -123,9 +130,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           '"${b.studentMessage}"',
-                          style: const TextStyle(
-                            fontStyle: FontStyle.italic,
-                          ),
+                          style: const TextStyle(fontStyle: FontStyle.italic),
                         ),
                       ),
 
@@ -193,11 +198,9 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
       msgController.dispose();
@@ -206,17 +209,12 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
   Future<void> _handleDecline(Booking b) async {
     try {
-      await _service.respondToBooking(
-        bookingId: b.id,
-        accept: false,
-      );
+      await _service.respondToBooking(bookingId: b.id, accept: false);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -230,9 +228,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
       stream: _service.watchUpcomingSessions(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snap.hasError) {
@@ -250,9 +246,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
         final sessions = snap.data ?? [];
 
         if (sessions.isEmpty) {
-          return const Center(
-            child: Text('No upcoming sessions'),
-          );
+          return const Center(child: Text('No upcoming sessions'));
         }
 
         return ListView.builder(
@@ -261,19 +255,13 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
             final s = sessions[i];
 
             return ListTile(
-              title: Text(
-                '${s.subject} • ${s.studentName}',
-              ),
+              title: Text('${s.subject} • ${s.studentName}'),
               subtitle: Text(
                 '${s.date.toLocal().toString().split(' ')[0]}  ${s.time}',
               ),
               trailing: s.isPaid
-                  ? const Chip(
-                      label: Text('Paid'),
-                    )
-                  : const Chip(
-                      label: Text('Unpaid'),
-                    ),
+                  ? const Chip(label: Text('Paid'))
+                  : const Chip(label: Text('Unpaid')),
             );
           },
         );
@@ -290,9 +278,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
       stream: _service.watchSessionHistory(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snap.hasError) {
@@ -310,9 +296,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
         final sessions = snap.data ?? [];
 
         if (sessions.isEmpty) {
-          return const Center(
-            child: Text('No past sessions yet'),
-          );
+          return const Center(child: Text('No past sessions yet'));
         }
 
         return ListView.builder(
@@ -321,9 +305,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
             final s = sessions[i];
 
             return ListTile(
-              title: Text(
-                '${s.subject} • ${s.studentName}',
-              ),
+              title: Text('${s.subject} • ${s.studentName}'),
               subtitle: Text(s.status.name),
             );
           },
@@ -341,9 +323,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
       stream: _service.watchMyReviews(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snap.hasError) {
@@ -361,9 +341,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
         final reviews = snap.data ?? [];
 
         if (reviews.isEmpty) {
-          return const Center(
-            child: Text('No feedback yet'),
-          );
+          return const Center(child: Text('No feedback yet'));
         }
 
         return ListView.builder(
@@ -372,23 +350,16 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
             final r = reviews[i];
 
             return Card(
-              margin: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: ListTile(
                 title: Row(
                   children: [
-                    Expanded(
-                      child: Text(r.studentName),
-                    ),
+                    Expanded(child: Text(r.studentName)),
                     Row(
                       children: List.generate(
                         5,
                         (idx) => Icon(
-                          idx < r.rating
-                              ? Icons.star
-                              : Icons.star_border,
+                          idx < r.rating ? Icons.star : Icons.star_border,
                           size: 16,
                           color: Colors.amber,
                         ),
@@ -405,4 +376,3 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     );
   }
 }
-

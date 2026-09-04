@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import '../models/tutor_profile.dart';
@@ -32,18 +33,6 @@ class _BookingScreenState extends State<BookingScreen> {
   String? _selectedSubject;
 
   String _sessionType = 'runtime';
-
-  // Fixed time slots for now.
-  // These can later be replaced with tutor-specific availability.
-  static const List<String> _timeSlots = [
-    '09:00 AM',
-    '10:00 AM',
-    '11:00 AM',
-    '01:00 PM',
-    '02:00 PM',
-    '03:00 PM',
-    '04:00 PM',
-  ];
 
   @override
   void initState() {
@@ -140,6 +129,35 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() {
       _selectedDate = _dateOnly(picked);
       _selectedTime = null;
+    });
+  }
+
+  // Open the clock/time picker.
+  Future<void> _pickTime() async {
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a date first.'),
+        ),
+      );
+      return;
+    }
+
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (picked == null) return;
+
+    if (!mounted) return;
+
+    final hour = picked.hourOfPeriod == 0 ? 12 : picked.hourOfPeriod;
+    final minute = picked.minute.toString().padLeft(2, '0');
+    final period = picked.period == DayPeriod.am ? 'AM' : 'PM';
+
+    setState(() {
+      _selectedTime = '$hour:$minute $period';
     });
   }
 
@@ -273,7 +291,10 @@ class _BookingScreenState extends State<BookingScreen> {
                         ? 'Pick a date'
                         : _formatDate(_selectedDate!),
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                  ),
                   onTap: _pickDate,
                 ),
 
@@ -299,26 +320,19 @@ class _BookingScreenState extends State<BookingScreen> {
 
                 const SizedBox(height: 8),
 
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _timeSlots.map((slot) {
-                    final selected = _selectedTime == slot;
-
-                    return ChoiceChip(
-                      label: Text(slot),
-                      selected: selected,
-                      onSelected: _selectedDate == null
-                          ? null
-                          : (selected) {
-                              if (selected) {
-                                setState(() {
-                                  _selectedTime = slot;
-                                });
-                              }
-                            },
-                    );
-                  }).toList(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.access_time),
+                  title: Text(
+                    _selectedTime == null
+                        ? 'Pick a time'
+                        : _selectedTime!,
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                  ),
+                  onTap: _selectedDate == null ? null : _pickTime,
                 ),
 
                 const SizedBox(height: 20),
@@ -337,6 +351,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   groupValue: _sessionType,
                   onChanged: (value) {
                     if (value == null) return;
+
                     setState(() {
                       _sessionType = value;
                     });
