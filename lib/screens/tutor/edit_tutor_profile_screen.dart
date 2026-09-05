@@ -1,9 +1,6 @@
-import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../models/tutor_profile.dart';
 import '../../services/tutor_service.dart';
@@ -23,8 +20,18 @@ class EditTutorProfileScreen extends StatefulWidget {
 
 class _EditTutorProfileScreenState
     extends State<EditTutorProfileScreen> {
+  // ============================================================
+  // COLORS
+  // ============================================================
+
   static const Color primaryColor = Color(0xFF4F46E5);
   static const Color backgroundColor = Color(0xFFF7F7FC);
+  static const Color textColor = Color(0xFF1F2937);
+  static const Color secondaryTextColor = Color(0xFF6B7280);
+
+  // ============================================================
+  // FORM & SERVICE
+  // ============================================================
 
   final _formKey = GlobalKey<FormState>();
   final TutorService _service = TutorService();
@@ -34,8 +41,13 @@ class _EditTutorProfileScreenState
   late final TextEditingController _cityController;
   late final TextEditingController _subjectController;
 
+  // ============================================================
+  // PROFILE DATA
+  // ============================================================
+
   List<String> _subjects = [];
-  String _photoUrl = '';
+
+  TutorProfile? _existingProfile;
 
   final List<String> _days = const [
     'Monday',
@@ -52,11 +64,12 @@ class _EditTutorProfileScreenState
   TimeOfDay? _availableFrom;
   TimeOfDay? _availableTo;
 
-  bool _isUploading = false;
   bool _isSaving = false;
   bool _isLoadingProfile = true;
 
-  TutorProfile? _existingProfile;
+  // ============================================================
+  // INIT
+  // ============================================================
 
   @override
   void initState() {
@@ -67,7 +80,15 @@ class _EditTutorProfileScreenState
     _cityController = TextEditingController();
     _subjectController = TextEditingController();
 
+    _nameController.addListener(_refreshAvatar);
+
     _loadProfile();
+  }
+
+  void _refreshAvatar() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   // ============================================================
@@ -114,18 +135,48 @@ class _EditTutorProfileScreenState
     }
   }
 
+  // ============================================================
+  // FILL FORM
+  // ============================================================
+
   void _fillFields(TutorProfile profile) {
     _nameController.text = profile.name;
     _bioController.text = profile.bio;
     _cityController.text = profile.city;
 
     _subjects = List<String>.from(profile.subjects);
-    _photoUrl = profile.photoUrl;
 
-    _availableDays = List<String>.from(profile.availableDays);
+    _availableDays =
+        List<String>.from(profile.availableDays);
 
     _availableFrom = _parseTime(profile.availableFrom);
     _availableTo = _parseTime(profile.availableTo);
+  }
+
+  // ============================================================
+  // INITIALS
+  // ============================================================
+
+  String _getInitials(String name) {
+    final trimmedName = name.trim();
+
+    if (trimmedName.isEmpty) {
+      return 'T';
+    }
+
+    final parts = trimmedName.split(
+      RegExp(r'\s+'),
+    );
+
+    if (parts.length == 1) {
+      return parts.first
+          .substring(0, 1)
+          .toUpperCase();
+    }
+
+    return '${parts.first.substring(0, 1)}'
+        '${parts.last.substring(0, 1)}'
+        .toUpperCase();
   }
 
   // ============================================================
@@ -149,8 +200,11 @@ class _EditTutorProfileScreenState
       final minutePart = parts[1].split(' ');
       int minute = int.parse(minutePart[0]);
 
-      final isPm = value.toUpperCase().contains('PM');
-      final isAm = value.toUpperCase().contains('AM');
+      final isPm =
+          value.toUpperCase().contains('PM');
+
+      final isAm =
+          value.toUpperCase().contains('AM');
 
       if (isPm && hour != 12) {
         hour += 12;
@@ -178,10 +232,13 @@ class _EditTutorProfileScreenState
         ? 12
         : time.hourOfPeriod;
 
-    final minute = time.minute.toString().padLeft(2, '0');
+    final minute =
+        time.minute.toString().padLeft(2, '0');
 
     final period =
-        time.period == DayPeriod.am ? 'AM' : 'PM';
+        time.period == DayPeriod.am
+            ? 'AM'
+            : 'PM';
 
     return '$hour:$minute $period';
   }
@@ -192,6 +249,8 @@ class _EditTutorProfileScreenState
 
   @override
   void dispose() {
+    _nameController.removeListener(_refreshAvatar);
+
     _nameController.dispose();
     _bioController.dispose();
     _cityController.dispose();
@@ -201,95 +260,12 @@ class _EditTutorProfileScreenState
   }
 
   // ============================================================
-  // IMAGE PICKER
-  // ============================================================
-
-  Future<void> _pickPhoto() async {
-    if (_isUploading || _isSaving || _isLoadingProfile) {
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      _showMessage(
-        'You must be logged in to upload a profile photo.',
-      );
-      return;
-    }
-
-    try {
-      final picker = ImagePicker();
-
-      final XFile? pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 70,
-        maxWidth: 1000,
-        maxHeight: 1000,
-      );
-
-      if (pickedFile == null) {
-        return;
-      }
-
-      setState(() {
-        _isUploading = true;
-      });
-
-      final Uint8List imageBytes =
-          await pickedFile.readAsBytes();
-
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('tutor_profiles')
-          .child('${user.uid}.jpg');
-
-      await storageRef.putData(
-        imageBytes,
-        SettableMetadata(
-          contentType: 'image/jpeg',
-        ),
-      );
-
-      final downloadUrl =
-          await storageRef.getDownloadURL();
-
-      if (!mounted) return;
-
-      setState(() {
-        _photoUrl = downloadUrl;
-      });
-
-      _showMessage(
-        'Profile photo uploaded successfully.',
-      );
-    } on FirebaseException catch (e) {
-      if (!mounted) return;
-
-      _showMessage(
-        'Image upload failed: ${e.message ?? e.code}',
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      _showMessage(
-        'Image upload failed. Please try again.',
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-      }
-    }
-  }
-
-  // ============================================================
   // SUBJECT MANAGEMENT
   // ============================================================
 
   void _addSubject() {
-    final subject = _subjectController.text.trim();
+    final subject =
+        _subjectController.text.trim();
 
     if (subject.isEmpty) {
       return;
@@ -335,7 +311,7 @@ class _EditTutorProfileScreenState
   }
 
   // ============================================================
-  // TIME PICKER
+  // TIME PICKERS
   // ============================================================
 
   Future<void> _selectFromTime() async {
@@ -381,7 +357,7 @@ class _EditTutorProfileScreenState
   // ============================================================
 
   Future<void> _saveProfile() async {
-    if (_isSaving || _isUploading || _isLoadingProfile) {
+    if (_isSaving || _isLoadingProfile) {
       return;
     }
 
@@ -403,7 +379,8 @@ class _EditTutorProfileScreenState
       return;
     }
 
-    if (_availableFrom == null || _availableTo == null) {
+    if (_availableFrom == null ||
+        _availableTo == null) {
       _showMessage(
         'Please select your available time.',
       );
@@ -412,11 +389,11 @@ class _EditTutorProfileScreenState
 
     final fromMinutes =
         _availableFrom!.hour * 60 +
-            _availableFrom!.minute;
+        _availableFrom!.minute;
 
     final toMinutes =
         _availableTo!.hour * 60 +
-            _availableTo!.minute;
+        _availableTo!.minute;
 
     if (fromMinutes >= toMinutes) {
       _showMessage(
@@ -425,7 +402,8 @@ class _EditTutorProfileScreenState
       return;
     }
 
-    final user = FirebaseAuth.instance.currentUser;
+    final user =
+        FirebaseAuth.instance.currentUser;
 
     if (user == null) {
       _showMessage(
@@ -445,20 +423,40 @@ class _EditTutorProfileScreenState
         bio: _bioController.text.trim(),
         city: _cityController.text.trim(),
         subjects: List<String>.from(_subjects),
-        photoUrl: _photoUrl,
-        avgRating: _existingProfile?.avgRating ?? 0.0,
-        reviewCount: _existingProfile?.reviewCount ?? 0,
+
+        // No Firebase Storage now.
+        // Keep the existing photo URL if your model
+        // already contains one.
+        photoUrl:
+            _existingProfile?.photoUrl ?? '',
+
+        avgRating:
+            _existingProfile?.avgRating ?? 0.0,
+
+        reviewCount:
+            _existingProfile?.reviewCount ?? 0,
+
         availableDays:
             List<String>.from(_availableDays),
+
         availableFrom:
             _formatTime(_availableFrom),
+
         availableTo:
             _formatTime(_availableTo),
       );
 
+      // Save profile to Firestore
       await _service.createOrUpdateProfile(
         updatedProfile,
       );
+
+      // Also update Firebase Auth display name
+      await user.updateDisplayName(
+        _nameController.text.trim(),
+      );
+
+      await user.reload();
 
       if (!mounted) return;
 
@@ -467,6 +465,7 @@ class _EditTutorProfileScreenState
           content: Text(
             'Tutor profile saved successfully.',
           ),
+          backgroundColor: Colors.green,
         ),
       );
 
@@ -497,7 +496,7 @@ class _EditTutorProfileScreenState
   }
 
   // ============================================================
-  // HELPER
+  // MESSAGE
   // ============================================================
 
   void _showMessage(String message) {
@@ -515,54 +514,67 @@ class _EditTutorProfileScreenState
   }
 
   // ============================================================
-  // UI HELPERS
+  // INPUT DECORATION
   // ============================================================
 
   InputDecoration _inputDecoration({
     required String label,
     String? hint,
     IconData? icon,
-    Widget? suffixIcon,
   }) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
+
       prefixIcon: icon == null
           ? null
-          : Icon(
-              icon,
+          : const Icon(
+              Icons.person_outline,
               color: primaryColor,
             ),
-      suffixIcon: suffixIcon,
+
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(
+
+      contentPadding:
+          const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 16,
       ),
+
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius:
+            BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
+
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius:
+            BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
+
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius:
+            BorderRadius.circular(14),
         borderSide: const BorderSide(
           color: primaryColor,
           width: 1.5,
         ),
       ),
+
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius:
+            BorderRadius.circular(14),
         borderSide: BorderSide(
           color: Colors.red.shade300,
         ),
       ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+
+      focusedErrorBorder:
+          OutlineInputBorder(
+        borderRadius:
+            BorderRadius.circular(14),
         borderSide: BorderSide(
           color: Colors.red.shade400,
           width: 1.5,
@@ -571,20 +583,29 @@ class _EditTutorProfileScreenState
     );
   }
 
+  // ============================================================
+  // SECTION TITLE
+  // ============================================================
+
   Widget _sectionTitle(
     String title,
     String subtitle,
     IconData icon,
   ) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Container(
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(12),
+            color:
+                primaryColor.withValues(
+              alpha: 0.10,
+            ),
+            borderRadius:
+                BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
@@ -592,7 +613,9 @@ class _EditTutorProfileScreenState
             size: 22,
           ),
         ),
+
         const SizedBox(width: 12),
+
         Expanded(
           child: Column(
             crossAxisAlignment:
@@ -602,17 +625,21 @@ class _EditTutorProfileScreenState
                 title,
                 style: const TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                  fontWeight:
+                      FontWeight.w700,
+                  color: textColor,
                 ),
               ),
+
               const SizedBox(height: 3),
+
               Text(
                 subtitle,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12.5,
                   height: 1.4,
-                  color: Colors.grey.shade600,
+                  color:
+                      secondaryTextColor,
                 ),
               ),
             ],
@@ -623,178 +650,269 @@ class _EditTutorProfileScreenState
   }
 
   // ============================================================
-  // UI
+  // BUILD
   // ============================================================
 
   @override
   Widget build(BuildContext context) {
     final isBusy =
-        _isUploading ||
         _isSaving ||
         _isLoadingProfile;
 
+    final initials =
+        _getInitials(
+      _nameController.text,
+    );
+
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor:
+          backgroundColor,
+
+      // ==========================================================
+      // APP BAR
+      // ==========================================================
+
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        foregroundColor: textColor,
+
         title: Text(
           _existingProfile == null
               ? 'Create Tutor Profile'
               : 'Edit Tutor Profile',
+
           style: const TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.w700,
+            fontWeight:
+                FontWeight.w700,
           ),
         ),
       ),
+
+      // ==========================================================
+      // BODY
+      // ==========================================================
+
       body: _isLoadingProfile
           ? const Center(
-              child: CircularProgressIndicator(
+              child:
+                  CircularProgressIndicator(
                 color: primaryColor,
               ),
             )
           : Form(
               key: _formKey,
+
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(
+                padding:
+                    const EdgeInsets.fromLTRB(
                   20,
                   20,
                   20,
                   30,
                 ),
+
                 children: [
                   // ==================================================
-                  // PROFILE PHOTO
+                  // PROFILE HEADER
                   // ==================================================
 
                   Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
+                    padding:
+                        const EdgeInsets.all(22),
+
+                    decoration:
+                        BoxDecoration(
                       color: Colors.white,
                       borderRadius:
-                          BorderRadius.circular(20),
+                          BorderRadius.circular(
+                        20,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              Colors.black.withValues(alpha: 0.04),
+                          color: Colors.black
+                              .withValues(
+                            alpha: 0.04,
+                          ),
                           blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          offset:
+                              const Offset(
+                            0,
+                            4,
+                          ),
                         ),
                       ],
                     ),
+
                     child: Column(
                       children: [
-                        GestureDetector(
-                          onTap:
-                              isBusy ? null : _pickPhoto,
-                          child: Stack(
-                            alignment: Alignment.center,
+                        // ------------------------------------------
+                        // INITIALS AVATAR
+                        // ------------------------------------------
+
+                        Container(
+                          width: 108,
+                          height: 108,
+
+                          decoration:
+                              BoxDecoration(
+                            shape:
+                                BoxShape.circle,
+
+                            color:
+                                primaryColor
+                                    .withValues(
+                              alpha: 0.10,
+                            ),
+
+                            border:
+                                Border.all(
+                              color:
+                                  primaryColor
+                                      .withValues(
+                                alpha: 0.20,
+                              ),
+                              width: 3,
+                            ),
+                          ),
+
+                          child: Center(
+                            child: Text(
+                              initials,
+
+                              style:
+                                  const TextStyle(
+                                fontSize: 34,
+                                fontWeight:
+                                    FontWeight
+                                        .bold,
+                                color:
+                                    primaryColor,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 15,
+                        ),
+
+                        // ------------------------------------------
+                        // NAME
+                        // ------------------------------------------
+
+                        Text(
+                          _nameController
+                                  .text
+                                  .trim()
+                                  .isEmpty
+                              ? 'Tutor'
+                              : _nameController
+                                  .text
+                                  .trim(),
+
+                          textAlign:
+                              TextAlign.center,
+
+                          style:
+                              const TextStyle(
+                            fontSize: 22,
+                            fontWeight:
+                                FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 8,
+                        ),
+
+                        // ------------------------------------------
+                        // TUTOR BADGE
+                        // ------------------------------------------
+
+                        Container(
+                          padding:
+                              const EdgeInsets
+                                  .symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+
+                          decoration:
+                              BoxDecoration(
+                            color:
+                                primaryColor
+                                    .withValues(
+                              alpha: 0.10,
+                            ),
+                            borderRadius:
+                                BorderRadius
+                                    .circular(
+                              30,
+                            ),
+                          ),
+
+                          child:
+                              const Row(
+                            mainAxisSize:
+                                MainAxisSize
+                                    .min,
+
                             children: [
-                              CircleAvatar(
-                                radius: 58,
-                                backgroundColor:
-                                    primaryColor.withValues(
-                                  alpha: 0.10,
-                                ),
-                                backgroundImage:
-                                    _photoUrl.isNotEmpty
-                                        ? NetworkImage(
-                                            _photoUrl,
-                                          )
-                                        : null,
-                                child:
-                                    _photoUrl.isEmpty
-                                        ? const Icon(
-                                            Icons
-                                                .person_rounded,
-                                            size: 55,
-                                            color:
-                                                primaryColor,
-                                          )
-                                        : null,
+                              Icon(
+                                Icons
+                                    .school_outlined,
+                                size: 17,
+                                color:
+                                    primaryColor,
                               ),
 
-                              if (_isUploading)
-                                const CircleAvatar(
-                                  radius: 58,
-                                  backgroundColor:
-                                      Colors.black38,
-                                  child:
-                                      CircularProgressIndicator(
-                                    color: Colors.white,
-                                  ),
-                                ),
+                              SizedBox(
+                                width: 7,
+                              ),
 
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding:
-                                      const EdgeInsets.all(8),
-                                  decoration:
-                                      const BoxDecoration(
-                                    color: primaryColor,
-                                    shape:
-                                        BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt_rounded,
-                                    color: Colors.white,
-                                    size: 19,
-                                  ),
+                              Text(
+                                'Tutor Account',
+                                style:
+                                    TextStyle(
+                                  color:
+                                      primaryColor,
+                                  fontWeight:
+                                      FontWeight
+                                          .w600,
+                                  fontSize: 13,
                                 ),
                               ),
                             ],
                           ),
                         ),
 
-                        const SizedBox(height: 12),
-
-                        Text(
-                          _isUploading
-                              ? 'Uploading photo...'
-                              : 'Add a profile photo',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight:
-                                FontWeight.w600,
-                          ),
+                        const SizedBox(
+                          height: 12,
                         ),
 
-                        const SizedBox(height: 4),
-
                         Text(
-                          'A clear photo helps students recognize you.',
-                          textAlign: TextAlign.center,
+                          'Your profile helps students learn more about you.',
+
+                          textAlign:
+                              TextAlign.center,
+
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        TextButton(
-                          onPressed:
-                              isBusy ? null : _pickPhoto,
-                          child: Text(
-                            _isUploading
-                                ? 'Uploading...'
-                                : 'Change Photo',
-                            style: const TextStyle(
-                              color: primaryColor,
-                              fontWeight:
-                                  FontWeight.w600,
-                            ),
+                            fontSize: 12.5,
+                            color: Colors
+                                .grey
+                                .shade600,
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(
+                    height: 28,
+                  ),
 
                   // ==================================================
                   // BASIC INFORMATION
@@ -806,41 +924,74 @@ class _EditTutorProfileScreenState
                     Icons.person_outline_rounded,
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(
+                    height: 16,
+                  ),
+
+                  // ------------------------------------------
+                  // NAME
+                  // ------------------------------------------
 
                   TextFormField(
-                    controller: _nameController,
+                    controller:
+                        _nameController,
                     enabled: !isBusy,
                     textInputAction:
                         TextInputAction.next,
-                    decoration: _inputDecoration(
+
+                    decoration:
+                        _inputDecoration(
                       label: 'Full Name',
-                      icon: Icons.person_outline,
+                      icon:
+                          Icons.person_outline,
                     ),
+
                     validator: (value) {
                       if (value == null ||
-                          value.trim().isEmpty) {
+                          value
+                              .trim()
+                              .isEmpty) {
                         return 'Please enter your name.';
+                      }
+
+                      if (value
+                              .trim()
+                              .length <
+                          2) {
+                        return 'Name must contain at least 2 characters.';
                       }
 
                       return null;
                     },
                   ),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(
+                    height: 14,
+                  ),
+
+                  // ------------------------------------------
+                  // CITY
+                  // ------------------------------------------
 
                   TextFormField(
-                    controller: _cityController,
+                    controller:
+                        _cityController,
                     enabled: !isBusy,
                     textInputAction:
                         TextInputAction.next,
-                    decoration: _inputDecoration(
+
+                    decoration:
+                        _inputDecoration(
                       label: 'City',
-                      icon: Icons.location_city_outlined,
+                      icon: Icons
+                          .location_city_outlined,
                     ),
+
                     validator: (value) {
                       if (value == null ||
-                          value.trim().isEmpty) {
+                          value
+                              .trim()
+                              .isEmpty) {
                         return 'Please enter your city.';
                       }
 
@@ -848,24 +999,38 @@ class _EditTutorProfileScreenState
                     },
                   ),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(
+                    height: 14,
+                  ),
+
+                  // ------------------------------------------
+                  // BIO
+                  // ------------------------------------------
 
                   TextFormField(
-                    controller: _bioController,
+                    controller:
+                        _bioController,
                     enabled: !isBusy,
                     maxLines: 4,
-                    decoration: _inputDecoration(
-                      label: 'Bio / Experience',
+
+                    decoration:
+                        _inputDecoration(
+                      label:
+                          'Bio / Experience',
                       hint:
                           'Tell students about your teaching experience...',
-                      icon:
-                          Icons.description_outlined,
+                      icon: Icons
+                          .description_outlined,
                     ).copyWith(
-                      alignLabelWithHint: true,
+                      alignLabelWithHint:
+                          true,
                     ),
+
                     validator: (value) {
                       if (value == null ||
-                          value.trim().isEmpty) {
+                          value
+                              .trim()
+                              .isEmpty) {
                         return 'Please enter a short bio.';
                       }
 
@@ -873,7 +1038,9 @@ class _EditTutorProfileScreenState
                     },
                   ),
 
-                  const SizedBox(height: 28),
+                  const SizedBox(
+                    height: 30,
+                  ),
 
                   // ==================================================
                   // SUBJECTS
@@ -885,78 +1052,128 @@ class _EditTutorProfileScreenState
                     Icons.menu_book_outlined,
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(
+                    height: 16,
+                  ),
 
                   Row(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                        CrossAxisAlignment
+                            .start,
+
                     children: [
                       Expanded(
-                        child: TextField(
+                        child:
+                            TextField(
                           controller:
                               _subjectController,
-                          enabled: !isBusy,
+                          enabled:
+                              !isBusy,
                           textInputAction:
-                              TextInputAction.done,
-                          onSubmitted: (_) =>
-                              _addSubject(),
-                          decoration: _inputDecoration(
-                            label: 'Add Subject',
-                            hint: 'e.g. Mathematics',
-                            icon:
-                                Icons.subject_outlined,
+                              TextInputAction
+                                  .done,
+
+                          onSubmitted:
+                              (_) =>
+                                  _addSubject(),
+
+                          decoration:
+                              _inputDecoration(
+                            label:
+                                'Add Subject',
+                            hint:
+                                'e.g. Mathematics',
+                            icon: Icons
+                                .subject_outlined,
                           ),
                         ),
                       ),
 
-                      const SizedBox(width: 10),
+                      const SizedBox(
+                        width: 10,
+                      ),
 
                       Container(
                         height: 56,
                         width: 56,
-                        decoration: BoxDecoration(
-                          color: primaryColor,
+
+                        decoration:
+                            BoxDecoration(
+                          color:
+                              primaryColor,
                           borderRadius:
-                              BorderRadius.circular(14),
+                              BorderRadius
+                                  .circular(
+                            14,
+                          ),
                         ),
-                        child: IconButton(
-                          onPressed:
-                              isBusy ? null : _addSubject,
-                          icon: const Icon(
-                            Icons.add_rounded,
-                            color: Colors.white,
+
+                        child:
+                            IconButton(
+                          onPressed: isBusy
+                              ? null
+                              : _addSubject,
+
+                          icon:
+                              const Icon(
+                            Icons
+                                .add_rounded,
+                            color:
+                                Colors.white,
                             size: 28,
                           ),
-                          tooltip: 'Add subject',
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(
+                    height: 12,
+                  ),
+
+                  // ------------------------------------------
+                  // SUBJECT CHIPS
+                  // ------------------------------------------
 
                   if (_subjects.isEmpty)
                     Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
+                      padding:
+                          const EdgeInsets
+                              .all(14),
+
+                      decoration:
+                          BoxDecoration(
+                        color:
+                            Colors.white,
                         borderRadius:
-                            BorderRadius.circular(14),
+                            BorderRadius
+                                .circular(
+                          14,
+                        ),
                       ),
+
                       child: Row(
                         children: [
                           Icon(
-                            Icons.info_outline_rounded,
-                            color:
-                                Colors.grey.shade500,
+                            Icons
+                                .info_outline_rounded,
+                            color: Colors
+                                .grey
+                                .shade500,
                             size: 20,
                           ),
-                          const SizedBox(width: 8),
+
+                          const SizedBox(
+                            width: 8,
+                          ),
+
                           Text(
                             'No subjects added yet.',
-                            style: TextStyle(
-                              color:
-                                  Colors.grey.shade600,
+                            style:
+                                TextStyle(
+                              color: Colors
+                                  .grey
+                                  .shade600,
                               fontSize: 13,
                             ),
                           ),
@@ -967,44 +1184,64 @@ class _EditTutorProfileScreenState
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
+
                       children:
-                          _subjects.map((subject) {
-                        return Chip(
-                          label: Text(
-                            subject,
-                            style: const TextStyle(
-                              fontWeight:
-                                  FontWeight.w500,
+                          _subjects
+                              .map(
+                        (subject) {
+                          return Chip(
+                            label:
+                                Text(
+                              subject,
+                              style:
+                                  const TextStyle(
+                                fontWeight:
+                                    FontWeight
+                                        .w500,
+                              ),
                             ),
-                          ),
-                          deleteIcon:
-                              const Icon(
-                            Icons.close_rounded,
-                            size: 17,
-                          ),
-                          onDeleted: isBusy
-                              ? null
-                              : () =>
-                                  _removeSubject(
-                                    subject,
-                                  ),
-                          backgroundColor:
-                              primaryColor.withValues(
-                            alpha: 0.10,
-                          ),
-                          side: BorderSide.none,
-                          shape:
-                              RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(
-                              10,
+
+                            deleteIcon:
+                                const Icon(
+                              Icons
+                                  .close_rounded,
+                              size: 17,
                             ),
-                          ),
-                        );
-                      }).toList(),
+
+                            onDeleted:
+                                isBusy
+                                    ? null
+                                    : () =>
+                                        _removeSubject(
+                                          subject,
+                                        ),
+
+                            backgroundColor:
+                                primaryColor
+                                    .withValues(
+                              alpha: 0.10,
+                            ),
+
+                            side:
+                                BorderSide
+                                    .none,
+
+                            shape:
+                                RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(
+                                10,
+                              ),
+                            ),
+                          );
+                        },
+                      ).toList(),
                     ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(
+                    height: 30,
+                  ),
 
                   // ==================================================
                   // AVAILABILITY
@@ -1016,113 +1253,177 @@ class _EditTutorProfileScreenState
                     Icons.calendar_month_outlined,
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(
+                    height: 18,
+                  ),
 
                   const Text(
                     'Available Days',
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      fontWeight:
+                          FontWeight.w700,
+                      color: textColor,
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(
+                    height: 10,
+                  ),
+
+                  // ------------------------------------------
+                  // DAYS
+                  // ------------------------------------------
 
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: _days.map((day) {
-                      final selected =
-                          _availableDays.contains(day);
 
-                      return FilterChip(
-                        label: Text(day),
-                        selected: selected,
-                        onSelected: isBusy
-                            ? null
-                            : (_) =>
-                                _toggleDay(day),
-                        selectedColor:
-                            primaryColor.withValues(
-                          alpha: 0.12,
-                        ),
-                        checkmarkColor:
-                            primaryColor,
-                        labelStyle: TextStyle(
-                          color: selected
-                              ? primaryColor
-                              : Colors.grey.shade700,
-                          fontWeight: selected
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                        ),
-                        backgroundColor:
-                            Colors.white,
-                        side: BorderSide(
-                          color: selected
-                              ? primaryColor
-                              : Colors.grey.shade300,
-                        ),
-                        shape:
-                            RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(
-                            10,
+                    children:
+                        _days.map(
+                      (day) {
+                        final selected =
+                            _availableDays
+                                .contains(
+                          day,
+                        );
+
+                        return FilterChip(
+                          label:
+                              Text(day),
+
+                          selected:
+                              selected,
+
+                          onSelected:
+                              isBusy
+                                  ? null
+                                  : (_) =>
+                                      _toggleDay(
+                                        day,
+                                      ),
+
+                          selectedColor:
+                              primaryColor
+                                  .withValues(
+                            alpha: 0.12,
                           ),
-                        ),
-                      );
-                    }).toList(),
+
+                          checkmarkColor:
+                              primaryColor,
+
+                          labelStyle:
+                              TextStyle(
+                            color: selected
+                                ? primaryColor
+                                : Colors
+                                    .grey
+                                    .shade700,
+                            fontWeight:
+                                selected
+                                    ? FontWeight
+                                        .w600
+                                    : FontWeight
+                                        .w400,
+                          ),
+
+                          backgroundColor:
+                              Colors.white,
+
+                          side:
+                              BorderSide(
+                            color: selected
+                                ? primaryColor
+                                : Colors
+                                    .grey
+                                    .shade300,
+                          ),
+
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius
+                                    .circular(
+                              10,
+                            ),
+                          ),
+                        );
+                      },
+                    ).toList(),
                   ),
 
-                  const SizedBox(height: 22),
+                  const SizedBox(
+                    height: 22,
+                  ),
 
                   const Text(
                     'Available Time',
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      fontWeight:
+                          FontWeight.w700,
+                      color: textColor,
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(
+                    height: 10,
+                  ),
+
+                  // ------------------------------------------
+                  // TIME
+                  // ------------------------------------------
 
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child:
+                            OutlinedButton.icon(
                           onPressed: isBusy
                               ? null
                               : _selectFromTime,
-                          icon: const Icon(
-                            Icons.access_time_rounded,
+
+                          icon:
+                              const Icon(
+                            Icons
+                                .access_time_rounded,
                             size: 19,
                           ),
+
                           label: Text(
-                            _availableFrom == null
+                            _availableFrom ==
+                                    null
                                 ? 'From'
                                 : _formatTime(
                                     _availableFrom,
                                   ),
                             overflow:
-                                TextOverflow.ellipsis,
+                                TextOverflow
+                                    .ellipsis,
                           ),
+
                           style:
-                              OutlinedButton.styleFrom(
+                              OutlinedButton
+                                  .styleFrom(
                             foregroundColor:
                                 primaryColor,
                             backgroundColor:
                                 Colors.white,
                             padding:
-                                const EdgeInsets.symmetric(
+                                const EdgeInsets
+                                    .symmetric(
                               vertical: 15,
                             ),
-                            side: const BorderSide(
-                              color: primaryColor,
+                            side:
+                                const BorderSide(
+                              color:
+                                  primaryColor,
                             ),
                             shape:
                                 RoundedRectangleBorder(
                               borderRadius:
-                                  BorderRadius.circular(
+                                  BorderRadius
+                                      .circular(
                                 13,
                               ),
                             ),
@@ -1132,53 +1433,69 @@ class _EditTutorProfileScreenState
 
                       const Padding(
                         padding:
-                            EdgeInsets.symmetric(
+                            EdgeInsets
+                                .symmetric(
                           horizontal: 10,
                         ),
+
                         child: Text(
                           'to',
                           style: TextStyle(
                             color: Colors.grey,
-                            fontWeight: FontWeight.w600,
+                            fontWeight:
+                                FontWeight.w600,
                           ),
                         ),
                       ),
 
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child:
+                            OutlinedButton.icon(
                           onPressed: isBusy
                               ? null
                               : _selectToTime,
-                          icon: const Icon(
-                            Icons.access_time_rounded,
+
+                          icon:
+                              const Icon(
+                            Icons
+                                .access_time_rounded,
                             size: 19,
                           ),
+
                           label: Text(
-                            _availableTo == null
+                            _availableTo ==
+                                    null
                                 ? 'To'
                                 : _formatTime(
                                     _availableTo,
                                   ),
                             overflow:
-                                TextOverflow.ellipsis,
+                                TextOverflow
+                                    .ellipsis,
                           ),
+
                           style:
-                              OutlinedButton.styleFrom(
+                              OutlinedButton
+                                  .styleFrom(
                             foregroundColor:
                                 primaryColor,
                             backgroundColor:
                                 Colors.white,
                             padding:
-                                const EdgeInsets.symmetric(
+                                const EdgeInsets
+                                    .symmetric(
                               vertical: 15,
                             ),
-                            side: const BorderSide(
-                              color: primaryColor,
+                            side:
+                                const BorderSide(
+                              color:
+                                  primaryColor,
                             ),
                             shape:
                                 RoundedRectangleBorder(
                               borderRadius:
-                                  BorderRadius.circular(
+                                  BorderRadius
+                                      .circular(
                                 13,
                               ),
                             ),
@@ -1188,34 +1505,57 @@ class _EditTutorProfileScreenState
                     ],
                   ),
 
-                  if (_availableFrom != null &&
+                  // ------------------------------------------
+                  // TIME WARNING
+                  // ------------------------------------------
+
+                  if (_availableFrom !=
+                          null &&
                       _availableTo != null &&
-                      (_availableFrom!.hour * 60 +
-                              _availableFrom!.minute) >=
-                          (_availableTo!.hour * 60 +
-                              _availableTo!.minute))
+                      (_availableFrom!
+                                  .hour *
+                              60 +
+                          _availableFrom!
+                              .minute) >=
+                          (_availableTo!
+                                  .hour *
+                              60 +
+                          _availableTo!
+                              .minute))
                     Padding(
                       padding:
-                          const EdgeInsets.only(
+                          const EdgeInsets
+                              .only(
                         top: 10,
                       ),
+
                       child: Row(
                         crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                            CrossAxisAlignment
+                                .start,
+
                         children: [
                           Icon(
-                            Icons.warning_amber_rounded,
+                            Icons
+                                .warning_amber_rounded,
                             size: 18,
-                            color:
-                                Colors.red.shade600,
+                            color: Colors
+                                .red
+                                .shade600,
                           ),
-                          const SizedBox(width: 6),
+
+                          const SizedBox(
+                            width: 6,
+                          ),
+
                           Expanded(
                             child: Text(
                               'The "From" time must be earlier than the "To" time.',
-                              style: TextStyle(
-                                color:
-                                    Colors.red.shade700,
+                              style:
+                                  TextStyle(
+                                color: Colors
+                                    .red
+                                    .shade700,
                                 fontSize: 12.5,
                               ),
                             ),
@@ -1224,7 +1564,9 @@ class _EditTutorProfileScreenState
                       ),
                     ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(
+                    height: 30,
+                  ),
 
                   // ==================================================
                   // SAVE BUTTON
@@ -1233,48 +1575,114 @@ class _EditTutorProfileScreenState
                   SizedBox(
                     height: 54,
                     width: double.infinity,
-                    child: ElevatedButton(
+
+                    child:
+                        ElevatedButton(
                       onPressed:
-                          isBusy ? null : _saveProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
+                          isBusy
+                              ? null
+                              : _saveProfile,
+
+                      style:
+                          ElevatedButton
+                              .styleFrom(
+                        backgroundColor:
+                            primaryColor,
+                        foregroundColor:
+                            Colors.white,
+                        disabledBackgroundColor:
+                            primaryColor
+                                .withValues(
+                          alpha: 0.5,
+                        ),
                         elevation: 0,
+
                         shape:
                             RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(15),
+                              BorderRadius
+                                  .circular(
+                            15,
+                          ),
                         ),
                       ),
+
                       child: _isSaving
                           ? const SizedBox(
                               height: 22,
                               width: 22,
                               child:
                                   CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.white,
+                                strokeWidth:
+                                    2.5,
+                                color:
+                                    Colors.white,
                               ),
                             )
                           : const Row(
                               mainAxisAlignment:
-                                  MainAxisAlignment.center,
+                                  MainAxisAlignment
+                                      .center,
+
                               children: [
                                 Icon(
-                                  Icons.save_outlined,
+                                  Icons
+                                      .save_outlined,
                                   size: 21,
                                 ),
-                                SizedBox(width: 8),
+
+                                SizedBox(
+                                  width: 8,
+                                ),
+
                                 Text(
                                   'Save Profile',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                                  style:
+                                      TextStyle(
+                                    fontSize:
+                                        16,
                                     fontWeight:
-                                        FontWeight.w700,
+                                        FontWeight
+                                            .w700,
                                   ),
                                 ),
                               ],
                             ),
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 12,
+                  ),
+
+                  // ==================================================
+                  // CANCEL
+                  // ==================================================
+
+                  SizedBox(
+                    height: 50,
+                    width: double.infinity,
+
+                    child: TextButton(
+                      onPressed: isBusy
+                          ? null
+                          : () {
+                              Navigator.pop(
+                                context,
+                              );
+                            },
+
+                      child: const Text(
+                        'Cancel',
+                        style:
+                            TextStyle(
+                          color:
+                              secondaryTextColor,
+                          fontSize: 15,
+                          fontWeight:
+                              FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -1283,3 +1691,4 @@ class _EditTutorProfileScreenState
     );
   }
 }
+
