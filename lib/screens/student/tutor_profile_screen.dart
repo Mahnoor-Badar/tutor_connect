@@ -53,7 +53,7 @@ class TutorProfileScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black,
                     blurRadius: 14,
                     offset: const Offset(0, 5),
                   ),
@@ -64,7 +64,7 @@ class TutorProfileScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 58,
                     backgroundColor:
-                        primaryColor.withOpacity(0.10),
+                        primaryColor,
                     backgroundImage:
                         tutor.photoUrl.isNotEmpty
                             ? NetworkImage(tutor.photoUrl)
@@ -126,7 +126,7 @@ class TutorProfileScreen extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.10),
+                      color: Colors.amber,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -212,7 +212,7 @@ class TutorProfileScreen extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: primaryColor
-                                .withOpacity(0.10),
+                                ,
                             borderRadius:
                                 BorderRadius.circular(10),
                           ),
@@ -261,7 +261,7 @@ class TutorProfileScreen extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.grey
-                                    .withOpacity(0.08),
+                                    ,
                                 borderRadius:
                                     BorderRadius.circular(
                                         9),
@@ -390,7 +390,7 @@ class _InfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black,
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -405,7 +405,7 @@ class _InfoCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.10),
+                  color: primaryColor,
                   borderRadius:
                       BorderRadius.circular(11),
                 ),

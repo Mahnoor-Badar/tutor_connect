@@ -154,7 +154,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withOpacity(0.20),
+                    color: primaryColor,
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -166,7 +166,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                     height: 52,
                     width: 52,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.16),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: const Icon(
@@ -196,7 +196,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                           '${widget.session.date.year}'
                           ' • ${widget.session.time}',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white,
                             fontSize: 13,
                           ),
                         ),
@@ -374,7 +374,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                     height: 34,
                     width: 34,
                     decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.10),
+                      color: primaryColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
@@ -404,11 +404,11 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: primaryColor.withOpacity(0.15),
+                    color: primaryColor,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black,
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -513,7 +513,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                             height: 70,
                             width: 70,
                             decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.08),
+                              color: primaryColor,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -561,7 +561,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
+                              color: Colors.black,
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -575,7 +575,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                               height: 38,
                               width: 38,
                               decoration: BoxDecoration(
-                                color: primaryColor.withOpacity(0.10),
+                                color: primaryColor,
                                 borderRadius:
                                     BorderRadius.circular(10),
                               ),

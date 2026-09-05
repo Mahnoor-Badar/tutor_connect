@@ -83,7 +83,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black,
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -155,7 +155,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.10),
+                        color: primaryColor,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -253,7 +253,7 @@ class _TutorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black,
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -265,7 +265,7 @@ class _TutorCard extends StatelessWidget {
           // Profile picture
           CircleAvatar(
             radius: 30,
-            backgroundColor: primaryColor.withOpacity(0.10),
+            backgroundColor: primaryColor,
             backgroundImage: tutor.photoUrl.isNotEmpty
                 ? NetworkImage(tutor.photoUrl)
                 : null,
@@ -419,7 +419,7 @@ class _EmptyState extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: const Color(0xFF4F46E5).withOpacity(0.10),
+                color: const Color(0xFF4F46E5),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

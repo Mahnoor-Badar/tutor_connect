@@ -328,7 +328,7 @@ class _BookingScreenState extends State<BookingScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black,
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -340,7 +340,7 @@ class _BookingScreenState extends State<BookingScreen> {
               height: 46,
               width: 46,
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.10),
+                color: primaryColor,
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(
@@ -425,7 +425,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withOpacity(0.20),
+                        color: primaryColor,
                         blurRadius: 18,
                         offset: const Offset(0, 8),
                       ),
@@ -435,7 +435,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: Colors.white.withOpacity(0.18),
+                        backgroundColor: Colors.white,
                         backgroundImage:
                             widget.tutor.photoUrl.isNotEmpty
                                 ? NetworkImage(widget.tutor.photoUrl)
@@ -466,7 +466,7 @@ class _BookingScreenState extends State<BookingScreen> {
                             Text(
                               'Request a session with ${widget.tutor.name}',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
+                                color: Colors.white,
                                 fontSize: 13,
                               ),
                             ),
@@ -591,7 +591,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black,
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -676,10 +676,10 @@ class _BookingScreenState extends State<BookingScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.07),
+                    color: primaryColor,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: primaryColor.withOpacity(0.12),
+                      color: primaryColor,
                     ),
                   ),
                   child: Row(

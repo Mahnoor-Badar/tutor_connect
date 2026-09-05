@@ -126,7 +126,7 @@ class MySessionsScreen extends StatelessWidget {
                       height: 90,
                       width: 90,
                       decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.10),
+                        color: primaryColor,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -269,7 +269,7 @@ class _SessionCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black,
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -288,7 +288,7 @@ class _SessionCard extends StatelessWidget {
                   height: 52,
                   width: 52,
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.10),
+                    color: primaryColor,
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: const Icon(
@@ -332,7 +332,7 @@ class _SessionCard extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.10),
+                    color: statusColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -400,8 +400,8 @@ class _SessionCard extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isPaid
-                    ? Colors.green.withOpacity(0.07)
-                    : Colors.orange.withOpacity(0.08),
+                    ? Colors.green
+                    : Colors.orange,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -545,7 +545,7 @@ class _InfoItem extends StatelessWidget {
             height: 36,
             width: 36,
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.10),
+              color: primaryColor,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
