@@ -38,32 +38,82 @@ class _EditTutorProfileScreenState
 
   bool _isUploading = false;
   bool _isSaving = false;
+  bool _isLoadingProfile = true;
+
+  // Stores the profile loaded from Firestore.
+  // This is important because widget.profile can be null.
+  TutorProfile? _existingProfile;
 
   @override
   void initState() {
     super.initState();
 
-    final profile = widget.profile;
-
-    _nameController = TextEditingController(
-      text: profile?.name ?? '',
-    );
-
-    _bioController = TextEditingController(
-      text: profile?.bio ?? '',
-    );
-
-    _cityController = TextEditingController(
-      text: profile?.city ?? '',
-    );
-
+    _nameController = TextEditingController();
+    _bioController = TextEditingController();
+    _cityController = TextEditingController();
     _subjectController = TextEditingController();
 
-    _subjects = List<String>.from(
-      profile?.subjects ?? <String>[],
-    );
+    _loadProfile();
+  }
 
-    _photoUrl = profile?.photoUrl ?? '';
+  // ============================================================
+  // LOAD EXISTING PROFILE
+  // ============================================================
+
+  Future<void> _loadProfile() async {
+    try {
+      // If a profile was passed to this screen, use it.
+      if (widget.profile != null) {
+        _existingProfile = widget.profile;
+
+        _fillFields(widget.profile!);
+
+        if (mounted) {
+          setState(() {
+            _isLoadingProfile = false;
+          });
+        }
+
+        return;
+      }
+
+      // Otherwise get the currently logged-in tutor's profile
+      // directly from Firestore through TutorService.
+      final profile = await _service.watchOwnProfile().first;
+
+      if (!mounted) return;
+
+      if (profile != null) {
+        _existingProfile = profile;
+
+        _fillFields(profile);
+      }
+
+      setState(() {
+        _isLoadingProfile = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingProfile = false;
+      });
+
+      _showMessage(
+        'Could not load your profile. Please try again.',
+      );
+    }
+  }
+
+  // Put the saved profile information into the form fields.
+  void _fillFields(TutorProfile profile) {
+    _nameController.text = profile.name;
+    _bioController.text = profile.bio;
+    _cityController.text = profile.city;
+
+    _subjects = List<String>.from(profile.subjects);
+
+    _photoUrl = profile.photoUrl;
   }
 
   @override
@@ -76,15 +126,23 @@ class _EditTutorProfileScreenState
     super.dispose();
   }
 
+  // ============================================================
   // IMAGE PICKER + FIREBASE STORAGE
+  // ============================================================
 
   Future<void> _pickPhoto() async {
-    if (_isUploading || _isSaving) return;
+    if (_isUploading ||
+        _isSaving ||
+        _isLoadingProfile) {
+      return;
+    }
 
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      _showMessage('You must be logged in to upload a profile photo.');
+      _showMessage(
+        'You must be logged in to upload a profile photo.',
+      );
       return;
     }
 
@@ -106,8 +164,8 @@ class _EditTutorProfileScreenState
         _isUploading = true;
       });
 
-      // Read image as bytes instead of using dart:io File.
-      final Uint8List imageBytes = await pickedFile.readAsBytes();
+      final Uint8List imageBytes =
+          await pickedFile.readAsBytes();
 
       final storageRef = FirebaseStorage.instance
           .ref()
@@ -121,7 +179,8 @@ class _EditTutorProfileScreenState
         ),
       );
 
-      final downloadUrl = await storageRef.getDownloadURL();
+      final downloadUrl =
+          await storageRef.getDownloadURL();
 
       if (!mounted) return;
 
@@ -129,7 +188,9 @@ class _EditTutorProfileScreenState
         _photoUrl = downloadUrl;
       });
 
-      _showMessage('Profile photo uploaded successfully.');
+      _showMessage(
+        'Profile photo uploaded successfully.',
+      );
     } on FirebaseException catch (e) {
       if (!mounted) return;
 
@@ -151,7 +212,9 @@ class _EditTutorProfileScreenState
     }
   }
 
+  // ============================================================
   // SUBJECT MANAGEMENT
+  // ============================================================
 
   void _addSubject() {
     final subject = _subjectController.text.trim();
@@ -162,11 +225,14 @@ class _EditTutorProfileScreenState
 
     final alreadyExists = _subjects.any(
       (existingSubject) =>
-          existingSubject.toLowerCase() == subject.toLowerCase(),
+          existingSubject.toLowerCase() ==
+          subject.toLowerCase(),
     );
 
     if (alreadyExists) {
-      _showMessage('This subject has already been added.');
+      _showMessage(
+        'This subject has already been added.',
+      );
       return;
     }
 
@@ -182,10 +248,14 @@ class _EditTutorProfileScreenState
     });
   }
 
+  // ============================================================
   // SAVE PROFILE
+  // ============================================================
 
   Future<void> _saveProfile() async {
-    if (_isSaving || _isUploading) {
+    if (_isSaving ||
+        _isUploading ||
+        _isLoadingProfile) {
       return;
     }
 
@@ -194,14 +264,18 @@ class _EditTutorProfileScreenState
     }
 
     if (_subjects.isEmpty) {
-      _showMessage('Please add at least one subject.');
+      _showMessage(
+        'Please add at least one subject.',
+      );
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      _showMessage('You must be logged in to save your profile.');
+      _showMessage(
+        'You must be logged in to save your profile.',
+      );
       return;
     }
 
@@ -210,19 +284,26 @@ class _EditTutorProfileScreenState
     });
 
     try {
-      final currentProfile = widget.profile;
-
       final updatedProfile = TutorProfile(
-        uid: currentProfile?.uid ?? user.uid,
+        // Always use the logged-in tutor's UID.
+        uid: user.uid,
+
         name: _nameController.text.trim(),
+
         bio: _bioController.text.trim(),
+
         city: _cityController.text.trim(),
+
         subjects: List<String>.from(_subjects),
+
         photoUrl: _photoUrl,
 
-        // Preserve existing rating information.
-        avgRating: currentProfile?.avgRating ?? 0.0,
-        reviewCount: currentProfile?.reviewCount ?? 0,
+        // IMPORTANT:
+        // Keep the existing rating information when editing.
+        avgRating: _existingProfile?.avgRating ?? 0.0,
+
+        reviewCount:
+            _existingProfile?.reviewCount ?? 0,
       );
 
       await _service.createOrUpdateProfile(
@@ -239,7 +320,10 @@ class _EditTutorProfileScreenState
         ),
       );
 
-      Navigator.pop(context, updatedProfile);
+      Navigator.pop(
+        context,
+        updatedProfile,
+      );
     } on FirebaseException catch (e) {
       if (!mounted) return;
 
@@ -261,7 +345,9 @@ class _EditTutorProfileScreenState
     }
   }
 
+  // ============================================================
   // HELPER
+  // ============================================================
 
   void _showMessage(String message) {
     if (!mounted) return;
@@ -273,261 +359,325 @@ class _EditTutorProfileScreenState
     );
   }
 
+  // ============================================================
   // UI
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
-    final isBusy = _isUploading || _isSaving;
+    final isBusy =
+        _isUploading ||
+        _isSaving ||
+        _isLoadingProfile;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.profile == null
+          _existingProfile == null
               ? 'Create Tutor Profile'
               : 'Edit Tutor Profile',
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // PROFILE PHOTO
 
-            Center(
-              child: GestureDetector(
-                onTap: isBusy ? null : _pickPhoto,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 55,
-                      backgroundImage: _photoUrl.isNotEmpty
-                          ? NetworkImage(_photoUrl)
-                          : null,
-                      child: _photoUrl.isEmpty
-                          ? const Icon(
-                              Icons.person,
-                              size: 55,
-                            )
-                          : null,
-                    ),
+      // --------------------------------------------------------
+      // SHOW LOADING WHILE PROFILE IS BEING FETCHED
+      // --------------------------------------------------------
 
-                    if (_isUploading)
-                      const CircleAvatar(
-                        radius: 55,
-                        backgroundColor: Colors.black38,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
+      body: _isLoadingProfile
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // ==================================================
+                  // PROFILE PHOTO
+                  // ==================================================
+
+                  Center(
+                    child: GestureDetector(
+                      onTap:
+                          isBusy ? null : _pickPhoto,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 55,
+                            backgroundImage:
+                                _photoUrl.isNotEmpty
+                                    ? NetworkImage(
+                                        _photoUrl,
+                                      )
+                                    : null,
+                            child:
+                                _photoUrl.isEmpty
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 55,
+                                      )
+                                    : null,
+                          ),
+
+                          if (_isUploading)
+                            const CircleAvatar(
+                              radius: 55,
+                              backgroundColor:
+                                  Colors.black38,
+                              child:
+                                  CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                            ),
+
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding:
+                                  const EdgeInsets.all(7),
+                              decoration:
+                                  const BoxDecoration(
+                                color: Colors.blue,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                  ),
 
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                  const SizedBox(height: 8),
+
+                  Center(
+                    child: TextButton(
+                      onPressed:
+                          isBusy ? null : _pickPhoto,
+                      child: Text(
+                        _isUploading
+                            ? 'Uploading...'
+                            : 'Change Profile Photo',
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
 
-            const SizedBox(height: 8),
+                  const SizedBox(height: 20),
 
-            Center(
-              child: TextButton(
-                onPressed: isBusy ? null : _pickPhoto,
-                child: Text(
-                  _isUploading
-                      ? 'Uploading...'
-                      : 'Change Profile Photo',
-                ),
-              ),
-            ),
+                  // ==================================================
+                  // NAME
+                  // ==================================================
 
-            const SizedBox(height: 20),
-
-            // NAME
-
-            TextFormField(
-              controller: _nameController,
-              enabled: !isBusy,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Full Name',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person_outline),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter your name.';
-                }
-
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // CITY
-
-            TextFormField(
-              controller: _cityController,
-              enabled: !isBusy,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'City',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.location_city),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter your city.';
-                }
-
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // BIO
-
-            TextFormField(
-              controller: _bioController,
-              enabled: !isBusy,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Bio / Experience',
-                hintText:
-                    'Tell students about your teaching experience...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description_outlined),
-                alignLabelWithHint: true,
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a short bio.';
-                }
-
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            // ==================================================
-            // SUBJECTS
-            // ==================================================
-
-            const Text(
-              'Subjects',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _subjectController,
+                  TextFormField(
+                    controller: _nameController,
                     enabled: !isBusy,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _addSubject(),
-                    decoration: const InputDecoration(
-                      labelText: 'Add Subject',
-                      hintText: 'e.g. Mathematics',
+                    textInputAction:
+                        TextInputAction.next,
+                    decoration:
+                        const InputDecoration(
+                      labelText: 'Full Name',
                       border: OutlineInputBorder(),
+                      prefixIcon:
+                          Icon(Icons.person_outline),
+                    ),
+                    validator: (value) {
+                      if (value == null ||
+                          value.trim().isEmpty) {
+                        return 'Please enter your name.';
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ==================================================
+                  // CITY
+                  // ==================================================
+
+                  TextFormField(
+                    controller: _cityController,
+                    enabled: !isBusy,
+                    textInputAction:
+                        TextInputAction.next,
+                    decoration:
+                        const InputDecoration(
+                      labelText: 'City',
+                      border: OutlineInputBorder(),
+                      prefixIcon:
+                          Icon(Icons.location_city),
+                    ),
+                    validator: (value) {
+                      if (value == null ||
+                          value.trim().isEmpty) {
+                        return 'Please enter your city.';
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ==================================================
+                  // BIO
+                  // ==================================================
+
+                  TextFormField(
+                    controller: _bioController,
+                    enabled: !isBusy,
+                    maxLines: 4,
+                    decoration:
+                        const InputDecoration(
+                      labelText: 'Bio / Experience',
+                      hintText:
+                          'Tell students about your teaching experience...',
+                      border: OutlineInputBorder(),
+                      prefixIcon:
+                          Icon(Icons.description_outlined),
+                      alignLabelWithHint: true,
+                    ),
+                    validator: (value) {
+                      if (value == null ||
+                          value.trim().isEmpty) {
+                        return 'Please enter a short bio.';
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ==================================================
+                  // SUBJECTS
+                  // ==================================================
+
+                  const Text(
+                    'Subjects',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
 
-                const SizedBox(width: 8),
+                  const SizedBox(height: 8),
 
-                SizedBox(
-                  height: 56,
-                  child: IconButton(
-                    onPressed: isBusy ? null : _addSubject,
-                    icon: const Icon(
-                      Icons.add_circle,
-                      size: 36,
-                    ),
-                    tooltip: 'Add subject',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            if (_subjects.isEmpty)
-              const Text(
-                'No subjects added yet.',
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
-              )
-            else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _subjects.map(
-                  (subject) {
-                    return Chip(
-                      label: Text(subject),
-                      deleteIcon: const Icon(Icons.close),
-                      onDeleted: isBusy
-                          ? null
-                          : () => _removeSubject(subject),
-                    );
-                  },
-                ).toList(),
-              ),
-
-            const SizedBox(height: 28),
-
-            // SAVE BUTTON
-
-            SizedBox(
-              height: 50,
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: isBusy ? null : _saveProfile,
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        'Save Profile',
-                        style: TextStyle(
-                          fontSize: 16,
+                  Row(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller:
+                              _subjectController,
+                          enabled: !isBusy,
+                          textInputAction:
+                              TextInputAction.done,
+                          onSubmitted: (_) =>
+                              _addSubject(),
+                          decoration:
+                              const InputDecoration(
+                            labelText: 'Add Subject',
+                            hintText:
+                                'e.g. Mathematics',
+                            border:
+                                OutlineInputBorder(),
+                          ),
                         ),
                       ),
+
+                      const SizedBox(width: 8),
+
+                      SizedBox(
+                        height: 56,
+                        child: IconButton(
+                          onPressed: isBusy
+                              ? null
+                              : _addSubject,
+                          icon: const Icon(
+                            Icons.add_circle,
+                            size: 36,
+                          ),
+                          tooltip:
+                              'Add subject',
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  if (_subjects.isEmpty)
+                    const Text(
+                      'No subjects added yet.',
+                      style: TextStyle(
+                        color: Colors.grey,
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          _subjects.map(
+                        (subject) {
+                          return Chip(
+                            label: Text(subject),
+                            deleteIcon:
+                                const Icon(
+                              Icons.close,
+                            ),
+                            onDeleted: isBusy
+                                ? null
+                                : () =>
+                                    _removeSubject(
+                                      subject,
+                                    ),
+                          );
+                        },
+                      ).toList(),
+                    ),
+
+                  const SizedBox(height: 28),
+
+                  // ==================================================
+                  // SAVE BUTTON
+                  // ==================================================
+
+                  SizedBox(
+                    height: 50,
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed:
+                          isBusy ? null : _saveProfile,
+                      child: _isSaving
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child:
+                                  CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Save Profile',
+                              style: TextStyle(
+                                fontSize: 16,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

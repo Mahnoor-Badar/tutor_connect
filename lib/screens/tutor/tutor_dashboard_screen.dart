@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'edit_tutor_profile_screen.dart';
+import 'tutor_earnings_screen.dart';
 
 import '../../models/booking.dart';
 import '../../models/review.dart';
@@ -26,6 +27,19 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
           // Logout button
           actions: [
+            IconButton(
+              icon: const Icon(Icons.account_balance_wallet_outlined),
+              tooltip: 'My Earnings',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TutorEarningsScreen(),
+                  ),
+                );
+              },
+            ),
+
             IconButton(
               icon: const Icon(Icons.person_outline),
               tooltip: 'My Profile',
@@ -271,6 +285,14 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
                     const SizedBox(height: 6),
 
+                    if (s.sessionType == SessionType.monthly)
+                      Text(
+                        'Session ${s.sessionNumber} of ${s.sessionsExpected}',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+
+                    const SizedBox(height: 4),
+
                     Text(
                       '${s.date.toLocal().toString().split(' ')[0]}  ${s.time}',
                     ),
@@ -293,7 +315,13 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                           'Payment: ',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        Chip(label: Text(s.isPaid ? 'Paid' : 'Unpaid')),
+                        Chip(
+                          label: Text(
+                            s.paymentStatus == PaymentStatus.paid
+                                ? 'Paid'
+                                : 'Unpaid',
+                          ),
+                        ),
                       ],
                     ),
 
@@ -308,19 +336,16 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                         label: const Text('Mark Session Completed'),
                       ),
                     ),
-
                     const SizedBox(height: 8),
 
-                    // Mark Paid button
-                    if (!s.isPaid)
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () => _handleMarkPaid(s),
-                          icon: const Icon(Icons.payment),
-                          label: const Text('Mark as Paid'),
-                        ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _handleAddPayment(s),
+                        icon: const Icon(Icons.payments_outlined),
+                        label: const Text('Add Payment Terms'),
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -349,89 +374,136 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     }
   }
 
-Future<void> _handleMarkPaid(Booking session) async {
-  final amountController = TextEditingController();
-  String? errorText;
+  Future<void> _handleAddPayment(Booking session) async {
+    final amountController = TextEditingController();
 
-  final amount = await showDialog<double>(
-    context: context,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Mark Session as Paid'),
-            content: TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: InputDecoration(
-                labelText: 'Payment amount',
-                hintText: 'e.g. 1000',
-                prefixText: 'Rs. ',
-                border: const OutlineInputBorder(),
-                errorText: errorText,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext);
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final value = double.tryParse(
-                    amountController.text.trim(),
-                  );
+    PaymentType selectedType = PaymentType.perSession;
+    String? errorText;
 
-                  if (value == null || value <= 0) {
-                    setDialogState(() {
-                      errorText = 'Please enter a valid amount.';
-                    });
-                    return;
-                  }
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Add Payment Terms'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<PaymentType>(
+                      initialValue: selectedType,
+                      decoration: const InputDecoration(
+                        labelText: 'Payment Type',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: PaymentType.perSession,
+                          child: Text('Per Session'),
+                        ),
+                        DropdownMenuItem(
+                          value: PaymentType.monthlyContract,
+                          child: Text('Monthly Contract'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
 
-                  Navigator.pop(dialogContext, value);
-                },
-                child: const Text('Confirm'),
+                        setDialogState(() {
+                          selectedType = value;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Amount',
+                        hintText: 'e.g. 1000',
+                        prefixText: 'Rs. ',
+                        border: const OutlineInputBorder(),
+                        errorText: errorText,
+                      ),
+                    ),
+
+                    if (selectedType == PaymentType.monthlyContract) ...[
+                      const SizedBox(height: 12),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Monthly contract: 4 sessions over 28 days.',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ],
-          );
-        },
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext, false);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final amount = double.tryParse(
+                      amountController.text.trim(),
+                    );
+
+                    if (amount == null || amount <= 0) {
+                      setDialogState(() {
+                        errorText = 'Please enter a valid amount.';
+                      });
+                      return;
+                    }
+
+                    Navigator.pop(dialogContext, true);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    final amount = double.tryParse(amountController.text.trim());
+
+    amountController.dispose();
+
+    if (result != true || amount == null) {
+      return;
+    }
+
+    try {
+      await _service.setPaymentTerms(
+        bookingId: session.id,
+        paymentType: selectedType,
+        amount: amount,
       );
-    },
-  );
 
-  amountController.dispose();
+      if (!mounted) return;
 
-  if (amount == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment terms saved successfully.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
 
-  try {
-    await _service.markSessionPaid(
-      bookingId: session.id,
-      studentId: session.studentId,
-      amount: amount,
-    );
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Payment marked successfully.'),
-      ),
-    );
-  } catch (e) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to mark payment: $e'),
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save payment terms: $e')),
+      );
+    }
   }
-}
   // ------------------------------------------------------------
   // History tab
   // ------------------------------------------------------------

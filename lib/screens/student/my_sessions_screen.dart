@@ -221,22 +221,28 @@ class _SessionCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            Row(
-              children: [
-                Icon(
-                  session.isPaid ? Icons.check_circle : Icons.pending,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  session.isPaid ? 'Payment Completed' : 'Payment Pending',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: session.isPaid ? Colors.green : Colors.orange,
-                  ),
-                ),
-              ],
-            ),
+          Row(
+  children: [
+    Icon(
+      session.paymentStatus == PaymentStatus.paid
+          ? Icons.check_circle
+          : Icons.pending,
+      size: 20,
+    ),
+    const SizedBox(width: 8),
+    Text(
+      session.paymentStatus == PaymentStatus.paid
+          ? 'Payment Completed'
+          : 'Payment Pending',
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: session.paymentStatus == PaymentStatus.paid
+            ? Colors.green
+            : Colors.orange,
+      ),
+    ),
+  ],
+),
             if (session.status == BookingStatus.completed) ...[
               const SizedBox(height: 16),
 
