@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -179,8 +178,7 @@ class _EditTutorProfileScreenState
         ? 12
         : time.hourOfPeriod;
 
-    final minute =
-        time.minute.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
 
     final period =
         time.period == DayPeriod.am ? 'AM' : 'PM';
@@ -207,9 +205,7 @@ class _EditTutorProfileScreenState
   // ============================================================
 
   Future<void> _pickPhoto() async {
-    if (_isUploading ||
-        _isSaving ||
-        _isLoadingProfile) {
+    if (_isUploading || _isSaving || _isLoadingProfile) {
       return;
     }
 
@@ -385,9 +381,7 @@ class _EditTutorProfileScreenState
   // ============================================================
 
   Future<void> _saveProfile() async {
-    if (_isSaving ||
-        _isUploading ||
-        _isLoadingProfile) {
+    if (_isSaving || _isUploading || _isLoadingProfile) {
       return;
     }
 
@@ -409,8 +403,7 @@ class _EditTutorProfileScreenState
       return;
     }
 
-    if (_availableFrom == null ||
-        _availableTo == null) {
+    if (_availableFrom == null || _availableTo == null) {
       _showMessage(
         'Please select your available time.',
       );
@@ -590,7 +583,7 @@ class _EditTutorProfileScreenState
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: primaryColor,
+            color: primaryColor.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -642,7 +635,6 @@ class _EditTutorProfileScreenState
 
     return Scaffold(
       backgroundColor: backgroundColor,
-
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -657,7 +649,6 @@ class _EditTutorProfileScreenState
           ),
         ),
       ),
-
       body: _isLoadingProfile
           ? const Center(
               child: CircularProgressIndicator(
@@ -687,10 +678,9 @@ class _EditTutorProfileScreenState
                       boxShadow: [
                         BoxShadow(
                           color:
-                              Colors.black,
-                          blurRadius: 12,
-                          offset:
-                              const Offset(0, 4),
+                              Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -705,8 +695,9 @@ class _EditTutorProfileScreenState
                               CircleAvatar(
                                 radius: 58,
                                 backgroundColor:
-                                    primaryColor
-                                        ,
+                                    primaryColor.withValues(
+                                  alpha: 0.10,
+                                ),
                                 backgroundImage:
                                     _photoUrl.isNotEmpty
                                         ? NetworkImage(
@@ -998,14 +989,16 @@ class _EditTutorProfileScreenState
                                     subject,
                                   ),
                           backgroundColor:
-                              primaryColor
-                                  ,
+                              primaryColor.withValues(
+                            alpha: 0.10,
+                          ),
                           side: BorderSide.none,
                           shape:
                               RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.circular(
-                                    10),
+                              10,
+                            ),
                           ),
                         );
                       }).toList(),
@@ -1050,8 +1043,9 @@ class _EditTutorProfileScreenState
                             : (_) =>
                                 _toggleDay(day),
                         selectedColor:
-                            primaryColor
-                                ,
+                            primaryColor.withValues(
+                          alpha: 0.12,
+                        ),
                         checkmarkColor:
                             primaryColor,
                         labelStyle: TextStyle(
@@ -1067,13 +1061,14 @@ class _EditTutorProfileScreenState
                         side: BorderSide(
                           color: selected
                               ? primaryColor
-                                  
                               : Colors.grey.shade300,
                         ),
                         shape:
                             RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(10),
+                              BorderRadius.circular(
+                            10,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -1121,15 +1116,15 @@ class _EditTutorProfileScreenState
                                 const EdgeInsets.symmetric(
                               vertical: 15,
                             ),
-                            side: BorderSide(
-                              color: primaryColor
-                                  ,
+                            side: const BorderSide(
+                              color: primaryColor,
                             ),
                             shape:
                                 RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.circular(
-                                      13),
+                                13,
+                              ),
                             ),
                           ),
                         ),
@@ -1177,15 +1172,15 @@ class _EditTutorProfileScreenState
                                 const EdgeInsets.symmetric(
                               vertical: 15,
                             ),
-                            side: BorderSide(
-                              color: primaryColor
-                                  ,
+                            side: const BorderSide(
+                              color: primaryColor,
                             ),
                             shape:
                                 RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.circular(
-                                      13),
+                                13,
+                              ),
                             ),
                           ),
                         ),
@@ -1288,4 +1283,3 @@ class _EditTutorProfileScreenState
     );
   }
 }
-

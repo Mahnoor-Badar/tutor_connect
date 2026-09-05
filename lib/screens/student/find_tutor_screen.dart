@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -57,7 +56,6 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -70,7 +68,6 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
           ),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
         child: Column(
@@ -83,7 +80,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black,
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -139,7 +136,6 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                     ),
                   ),
                 ),
-
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('tutors')
@@ -155,7 +151,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: primaryColor,
+                        color: primaryColor.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -180,8 +176,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                     .collection('tutors')
                     .snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState ==
-                      ConnectionState.waiting) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                       child: CircularProgressIndicator(
                         color: primaryColor,
@@ -191,14 +186,12 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
 
                   if (snapshot.hasError) {
                     return _ErrorState(
-                      message:
-                          'Unable to load tutors.\n\n${snapshot.error}',
+                      message: 'Unable to load tutors.\n\n${snapshot.error}',
                     );
                   }
 
                   final tutors = snapshot.data?.docs.map((doc) {
-                        final data =
-                            doc.data() as Map<String, dynamic>;
+                        final data = doc.data() as Map<String, dynamic>;
 
                         return TutorProfile.fromMap(
                           doc.id,
@@ -253,7 +246,7 @@ class _TutorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black,
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -265,7 +258,7 @@ class _TutorCard extends StatelessWidget {
           // Profile picture
           CircleAvatar(
             radius: 30,
-            backgroundColor: primaryColor,
+            backgroundColor: primaryColor.withValues(alpha: 0.10),
             backgroundImage: tutor.photoUrl.isNotEmpty
                 ? NetworkImage(tutor.photoUrl)
                 : null,
@@ -317,9 +310,7 @@ class _TutorCard extends StatelessWidget {
                       size: 17,
                       color: Colors.amber,
                     ),
-
                     const SizedBox(width: 3),
-
                     Text(
                       tutor.avgRating.toStringAsFixed(1),
                       style: const TextStyle(
@@ -327,9 +318,7 @@ class _TutorCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-
                     const SizedBox(width: 10),
-
                     Flexible(
                       child: Row(
                         children: [
@@ -419,7 +408,7 @@ class _EmptyState extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: const Color(0xFF4F46E5),
+                color: const Color(0xFF4F46E5).withValues(alpha: 0.10),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -508,4 +497,3 @@ class _ErrorState extends StatelessWidget {
     );
   }
 }
-

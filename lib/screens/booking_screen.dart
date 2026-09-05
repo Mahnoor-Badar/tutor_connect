@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import '../models/tutor_profile.dart';
@@ -321,14 +322,12 @@ class _BookingScreenState extends State<BookingScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected
-                ? primaryColor
-                : Colors.grey.shade200,
+            color: selected ? primaryColor : Colors.grey.shade200,
             width: selected ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black,
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -340,7 +339,7 @@ class _BookingScreenState extends State<BookingScreen> {
               height: 46,
               width: 46,
               decoration: BoxDecoration(
-                color: primaryColor,
+                color: primaryColor.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(
@@ -425,7 +424,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor,
+                        color: primaryColor.withValues(alpha: 0.20),
                         blurRadius: 18,
                         offset: const Offset(0, 8),
                       ),
@@ -435,7 +434,8 @@ class _BookingScreenState extends State<BookingScreen> {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: Colors.white,
+                        backgroundColor:
+                            Colors.white.withValues(alpha: 0.18),
                         backgroundImage:
                             widget.tutor.photoUrl.isNotEmpty
                                 ? NetworkImage(widget.tutor.photoUrl)
@@ -451,8 +451,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
                               'Book a Session',
@@ -466,7 +465,8 @@ class _BookingScreenState extends State<BookingScreen> {
                             Text(
                               'Request a session with ${widget.tutor.name}',
                               style: TextStyle(
-                                color: Colors.white,
+                                color:
+                                    Colors.white.withValues(alpha: 0.85),
                                 fontSize: 13,
                               ),
                             ),
@@ -566,9 +566,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   icon: Icons.access_time_rounded,
                   title: 'Session Time',
                   value: _selectedTime ?? 'Pick a time',
-                  onTap: _selectedDate == null
-                      ? null
-                      : _pickTime,
+                  onTap: _selectedDate == null ? null : _pickTime,
                   selected: _selectedTime != null,
                 ),
 
@@ -578,7 +576,8 @@ class _BookingScreenState extends State<BookingScreen> {
 
                 _sectionTitle(
                   'Session Type',
-                  subtitle: 'Choose the type of tutoring arrangement',
+                  subtitle:
+                      'Choose the type of tutoring arrangement',
                 ),
                 const SizedBox(height: 10),
 
@@ -591,7 +590,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black,
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -610,7 +609,8 @@ class _BookingScreenState extends State<BookingScreen> {
                       children: [
                         RadioListTile<String>(
                           value: 'runtime',
-                          contentPadding: const EdgeInsets.symmetric(
+                          contentPadding:
+                              const EdgeInsets.symmetric(
                             horizontal: 14,
                           ),
                           activeColor: primaryColor,
@@ -630,7 +630,8 @@ class _BookingScreenState extends State<BookingScreen> {
                         ),
                         RadioListTile<String>(
                           value: 'monthly',
-                          contentPadding: const EdgeInsets.symmetric(
+                          contentPadding:
+                              const EdgeInsets.symmetric(
                             horizontal: 14,
                           ),
                           activeColor: primaryColor,
@@ -655,7 +656,8 @@ class _BookingScreenState extends State<BookingScreen> {
 
                 _sectionTitle(
                   'Message',
-                  subtitle: 'Tell the tutor anything they should know',
+                  subtitle:
+                      'Tell the tutor anything they should know',
                 ),
                 const SizedBox(height: 10),
 
@@ -676,10 +678,10 @@ class _BookingScreenState extends State<BookingScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: primaryColor,
+                    color: primaryColor.withValues(alpha: 0.07),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: primaryColor,
+                      color: primaryColor.withValues(alpha: 0.12),
                     ),
                   ),
                   child: Row(
@@ -735,7 +737,8 @@ class _BookingScreenState extends State<BookingScreen> {
                             ),
                           )
                         : const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.send_rounded,

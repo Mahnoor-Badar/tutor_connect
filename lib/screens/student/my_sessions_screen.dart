@@ -126,7 +126,7 @@ class MySessionsScreen extends StatelessWidget {
                       height: 90,
                       width: 90,
                       decoration: BoxDecoration(
-                        color: primaryColor,
+                        color: primaryColor.withValues(alpha: 0.10),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -176,9 +176,7 @@ class MySessionsScreen extends StatelessWidget {
                   color: Color(0xFF1F2937),
                 ),
               ),
-
               const SizedBox(height: 6),
-
               Text(
                 '${sessions.length} session${sessions.length == 1 ? '' : 's'}',
                 style: TextStyle(
@@ -186,9 +184,7 @@ class MySessionsScreen extends StatelessWidget {
                   color: Colors.grey.shade600,
                 ),
               ),
-
               const SizedBox(height: 20),
-
               ...sessions.map(
                 (session) => Padding(
                   padding: const EdgeInsets.only(bottom: 14),
@@ -257,8 +253,7 @@ class _SessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor();
 
-    final isPaid =
-        session.paymentStatus == PaymentStatus.paid;
+    final isPaid = session.paymentStatus == PaymentStatus.paid;
 
     return Container(
       decoration: BoxDecoration(
@@ -269,7 +264,7 @@ class _SessionCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black,
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -288,7 +283,7 @@ class _SessionCard extends StatelessWidget {
                   height: 52,
                   width: 52,
                   decoration: BoxDecoration(
-                    color: primaryColor,
+                    color: primaryColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: const Icon(
@@ -297,13 +292,10 @@ class _SessionCard extends StatelessWidget {
                     size: 28,
                   ),
                 ),
-
                 const SizedBox(width: 13),
-
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Tutor Session',
@@ -332,7 +324,7 @@ class _SessionCard extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor,
+                    color: statusColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -400,8 +392,8 @@ class _SessionCard extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isPaid
-                    ? Colors.green
-                    : Colors.orange,
+                    ? Colors.green.withValues(alpha: 0.07)
+                    : Colors.orange.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -444,8 +436,7 @@ class _SessionCard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            SessionNotesScreen(
+                        builder: (context) => SessionNotesScreen(
                           session: session,
                         ),
                       ),
@@ -482,8 +473,7 @@ class _SessionCard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            FeedbackScreen(
+                        builder: (context) => FeedbackScreen(
                           session: session,
                         ),
                       ),
@@ -545,7 +535,7 @@ class _InfoItem extends StatelessWidget {
             height: 36,
             width: 36,
             decoration: BoxDecoration(
-              color: primaryColor,
+              color: primaryColor.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -557,8 +547,7 @@ class _InfoItem extends StatelessWidget {
           const SizedBox(width: 9),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,

@@ -19,6 +19,10 @@ class TutorProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
 
+      // ============================================================
+      // APP BAR
+      // ============================================================
+
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -32,6 +36,10 @@ class TutorProfileScreen extends StatelessWidget {
         ),
       ),
 
+      // ============================================================
+      // BODY
+      // ============================================================
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           20,
@@ -41,9 +49,9 @@ class TutorProfileScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // =====================================================
+            // ========================================================
             // PROFILE HEADER
-            // =====================================================
+            // ========================================================
 
             Container(
               width: double.infinity,
@@ -53,7 +61,7 @@ class TutorProfileScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black,
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 14,
                     offset: const Offset(0, 5),
                   ),
@@ -64,11 +72,10 @@ class TutorProfileScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 58,
                     backgroundColor:
-                        primaryColor,
-                    backgroundImage:
-                        tutor.photoUrl.isNotEmpty
-                            ? NetworkImage(tutor.photoUrl)
-                            : null,
+                        primaryColor.withValues(alpha: 0.10),
+                    backgroundImage: tutor.photoUrl.isNotEmpty
+                        ? NetworkImage(tutor.photoUrl)
+                        : null,
                     child: tutor.photoUrl.isEmpty
                         ? const Icon(
                             Icons.person_rounded,
@@ -94,8 +101,7 @@ class TutorProfileScreen extends StatelessWidget {
                     const SizedBox(height: 7),
 
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.location_on_outlined,
@@ -119,14 +125,17 @@ class TutorProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 14),
 
-                  // Rating
+                  // ==================================================
+                  // RATING
+                  // ==================================================
+
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 13,
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.amber,
+                      color: Colors.amber.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -139,8 +148,7 @@ class TutorProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          tutor.avgRating
-                              .toStringAsFixed(1),
+                          tutor.avgRating.toStringAsFixed(1),
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
@@ -163,9 +171,9 @@ class TutorProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // =====================================================
+            // ========================================================
             // ABOUT
-            // =====================================================
+            // ========================================================
 
             _InfoCard(
               icon: Icons.person_outline_rounded,
@@ -184,9 +192,9 @@ class TutorProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // =====================================================
+            // ========================================================
             // SUBJECTS
-            // =====================================================
+            // ========================================================
 
             _InfoCard(
               icon: Icons.menu_book_outlined,
@@ -202,17 +210,15 @@ class TutorProfileScreen extends StatelessWidget {
                   : Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children:
-                          tutor.subjects.map((subject) {
+                      children: tutor.subjects.map((subject) {
                         return Container(
-                          padding:
-                              const EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: primaryColor
-                                ,
+                            color:
+                                primaryColor.withValues(alpha: 0.10),
                             borderRadius:
                                 BorderRadius.circular(10),
                           ),
@@ -221,8 +227,7 @@ class TutorProfileScreen extends StatelessWidget {
                             style: const TextStyle(
                               color: primaryColor,
                               fontSize: 13,
-                              fontWeight:
-                                  FontWeight.w600,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         );
@@ -232,9 +237,9 @@ class TutorProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // =====================================================
+            // ========================================================
             // AVAILABILITY
-            // =====================================================
+            // ========================================================
 
             if (tutor.availableDays.isNotEmpty ||
                 tutor.availableFrom.isNotEmpty ||
@@ -251,32 +256,28 @@ class TutorProfileScreen extends StatelessWidget {
                         spacing: 7,
                         runSpacing: 7,
                         children:
-                            tutor.availableDays.map(
-                          (day) {
-                            return Container(
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 7,
+                            tutor.availableDays.map((day) {
+                          return Container(
+                            padding:
+                                const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  Colors.grey.withValues(alpha: 0.08),
+                              borderRadius:
+                                  BorderRadius.circular(9),
+                            ),
+                            child: Text(
+                              day,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey
-                                    ,
-                                borderRadius:
-                                    BorderRadius.circular(
-                                        9),
-                              ),
-                              child: Text(
-                                day,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight:
-                                      FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          },
-                        ).toList(),
+                            ),
+                          );
+                        }).toList(),
                       ),
 
                     if (tutor.availableFrom.isNotEmpty &&
@@ -285,7 +286,7 @@ class TutorProfileScreen extends StatelessWidget {
 
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.access_time_rounded,
                             size: 19,
                             color: primaryColor,
@@ -295,8 +296,7 @@ class TutorProfileScreen extends StatelessWidget {
                             '${tutor.availableFrom} - ${tutor.availableTo}',
                             style: const TextStyle(
                               fontSize: 14,
-                              fontWeight:
-                                  FontWeight.w600,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -308,9 +308,9 @@ class TutorProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 26),
 
-            // =====================================================
+            // ========================================================
             // BOOK BUTTON
-            // =====================================================
+            // ========================================================
 
             SizedBox(
               width: double.infinity,
@@ -320,8 +320,7 @@ class TutorProfileScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          BookingScreen(
+                      builder: (context) => BookingScreen(
                         tutor: tutor,
                       ),
                     ),
@@ -332,8 +331,7 @@ class TutorProfileScreen extends StatelessWidget {
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                 ),
                 child: const Row(
@@ -390,7 +388,7 @@ class _InfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black,
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -405,9 +403,8 @@ class _InfoCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: primaryColor,
-                  borderRadius:
-                      BorderRadius.circular(11),
+                  color: primaryColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(11),
                 ),
                 child: Icon(
                   icon,

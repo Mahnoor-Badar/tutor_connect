@@ -308,7 +308,7 @@ class StudentDashboardScreen extends StatelessWidget {
         unselectedFontSize: 12,
         elevation: 12,
         onTap: (index) {
-          if (index == 3) {
+          if (index == 1) {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -322,16 +322,6 @@ class StudentDashboardScreen extends StatelessWidget {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home_rounded),
             label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search_rounded),
-            label: 'Tutors',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            activeIcon: Icon(Icons.calendar_month_rounded),
-            label: 'Sessions',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

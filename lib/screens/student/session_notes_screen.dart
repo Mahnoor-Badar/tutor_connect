@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import '../../models/booking.dart';
@@ -27,6 +28,10 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
   bool _isSaving = false;
   bool _isGenerating = false;
   String _aiSummary = '';
+
+  // ===============================================================
+  // SAVE NOTE
+  // ===============================================================
 
   Future<void> _saveNote() async {
     final notes = _notesController.text.trim();
@@ -77,6 +82,10 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
     }
   }
 
+  // ===============================================================
+  // AI SUMMARY
+  // ===============================================================
+
   Future<void> _generateAiSummary() async {
     final notes = _notesController.text.trim();
 
@@ -125,10 +134,19 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
     super.dispose();
   }
 
+  // ===============================================================
+  // BUILD
+  // ===============================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+
+      // ============================================================
+      // APP BAR
+      // ============================================================
+
       appBar: AppBar(
         title: const Text(
           'Session Notes',
@@ -140,12 +158,19 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
         foregroundColor: const Color(0xFF1F2937),
         elevation: 0,
       ),
+
+      // ============================================================
+      // BODY
+      // ============================================================
+
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ---------------- SESSION HEADER ----------------
+            // ========================================================
+            // SESSION HEADER
+            // ========================================================
 
             Container(
               padding: const EdgeInsets.all(18),
@@ -154,7 +179,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor,
+                    color: primaryColor.withValues(alpha: 0.20),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -166,7 +191,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                     height: 52,
                     width: 52,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.white.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: const Icon(
@@ -175,7 +200,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                       size: 28,
                     ),
                   ),
+
                   const SizedBox(width: 14),
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment:
@@ -189,14 +216,17 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+
                         const SizedBox(height: 6),
+
                         Text(
                           '${widget.session.date.day}/'
                           '${widget.session.date.month}/'
                           '${widget.session.date.year}'
                           ' • ${widget.session.time}',
                           style: TextStyle(
-                            color: Colors.white,
+                            color:
+                                Colors.white.withValues(alpha: 0.85),
                             fontSize: 13,
                           ),
                         ),
@@ -209,7 +239,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
 
             const SizedBox(height: 24),
 
-            // ---------------- NOTES TITLE ----------------
+            // ========================================================
+            // NOTES TITLE
+            // ========================================================
 
             const Text(
               'What did you learn?',
@@ -232,7 +264,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
 
             const SizedBox(height: 12),
 
-            // ---------------- NOTES INPUT ----------------
+            // ========================================================
+            // NOTES INPUT
+            // ========================================================
 
             TextField(
               controller: _notesController,
@@ -281,7 +315,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
 
             const SizedBox(height: 14),
 
-            // ---------------- SAVE BUTTON ----------------
+            // ========================================================
+            // SAVE BUTTON
+            // ========================================================
 
             SizedBox(
               width: double.infinity,
@@ -322,7 +358,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
 
             const SizedBox(height: 10),
 
-            // ---------------- AI BUTTON ----------------
+            // ========================================================
+            // AI BUTTON
+            // ========================================================
 
             SizedBox(
               width: double.infinity,
@@ -363,7 +401,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
               ),
             ),
 
-            // ---------------- AI SUMMARY ----------------
+            // ========================================================
+            // AI SUMMARY
+            // ========================================================
 
             if (_aiSummary.isNotEmpty) ...[
               const SizedBox(height: 20),
@@ -374,7 +414,7 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                     height: 34,
                     width: 34,
                     decoration: BoxDecoration(
-                      color: primaryColor,
+                      color: primaryColor.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
@@ -383,7 +423,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                       size: 19,
                     ),
                   ),
+
                   const SizedBox(width: 10),
+
                   const Text(
                     'AI Summary',
                     style: TextStyle(
@@ -404,11 +446,11 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: primaryColor,
+                    color: primaryColor.withValues(alpha: 0.15),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black,
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -427,7 +469,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
 
             const SizedBox(height: 20),
 
-            // ---------------- PREVIOUS NOTES ----------------
+            // ========================================================
+            // PREVIOUS NOTES
+            // ========================================================
 
             Row(
               children: [
@@ -436,7 +480,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                   color: primaryColor,
                   size: 21,
                 ),
+
                 const SizedBox(width: 8),
+
                 const Text(
                   'Previous Notes',
                   style: TextStyle(
@@ -449,6 +495,10 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
             ),
 
             const SizedBox(height: 12),
+
+            // ========================================================
+            // PREVIOUS NOTES LIST
+            // ========================================================
 
             Expanded(
               child: StreamBuilder(
@@ -479,14 +529,18 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                               size: 45,
                               color: Colors.red.shade400,
                             ),
+
                             const SizedBox(height: 10),
+
                             const Text(
                               'Unable to load notes',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+
                             const SizedBox(height: 6),
+
                             Text(
                               '${snapshot.error}',
                               textAlign: TextAlign.center,
@@ -503,6 +557,10 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
 
                   final notes = snapshot.data ?? [];
 
+                  // ==================================================
+                  // EMPTY STATE
+                  // ==================================================
+
                   if (notes.isEmpty) {
                     return Center(
                       child: Column(
@@ -513,7 +571,8 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                             height: 70,
                             width: 70,
                             decoration: BoxDecoration(
-                              color: primaryColor,
+                              color:
+                                  primaryColor.withValues(alpha: 0.08),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -522,7 +581,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                               color: primaryColor,
                             ),
                           ),
+
                           const SizedBox(height: 12),
+
                           const Text(
                             'No previous notes',
                             style: TextStyle(
@@ -530,7 +591,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+
                           const SizedBox(height: 5),
+
                           Text(
                             'Your saved notes will appear here.',
                             style: TextStyle(
@@ -542,6 +605,10 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                       ),
                     );
                   }
+
+                  // ==================================================
+                  // NOTES LIST
+                  // ==================================================
 
                   return ListView.builder(
                     padding: const EdgeInsets.only(bottom: 20),
@@ -561,7 +628,8 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black,
+                              color:
+                                  Colors.black.withValues(alpha: 0.03),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -575,7 +643,8 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                               height: 38,
                               width: 38,
                               decoration: BoxDecoration(
-                                color: primaryColor,
+                                color:
+                                    primaryColor.withValues(alpha: 0.10),
                                 borderRadius:
                                     BorderRadius.circular(10),
                               ),
@@ -585,7 +654,9 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
                                 size: 20,
                               ),
                             ),
+
                             const SizedBox(width: 12),
+
                             Expanded(
                               child: Text(
                                 note.notes,
@@ -610,3 +681,4 @@ class _SessionNotesScreenState extends State<SessionNotesScreen> {
     );
   }
 }
+
