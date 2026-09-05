@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../models/tutor_profile.dart';
 import '../booking_screen.dart';
@@ -53,7 +52,7 @@ class TutorProfileScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 14,
                     offset: const Offset(0, 5),
                   ),
@@ -64,7 +63,7 @@ class TutorProfileScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 58,
                     backgroundColor:
-                        primaryColor.withOpacity(0.10),
+                        primaryColor.withValues(alpha: 0.10),
                     backgroundImage:
                         tutor.photoUrl.isNotEmpty
                             ? NetworkImage(tutor.photoUrl)
@@ -126,7 +125,7 @@ class TutorProfileScreen extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.10),
+                      color: Colors.amber.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -139,8 +138,7 @@ class TutorProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          tutor.avgRating
-                              .toStringAsFixed(1),
+                          tutor.avgRating.toStringAsFixed(1),
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
@@ -202,17 +200,15 @@ class TutorProfileScreen extends StatelessWidget {
                   : Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children:
-                          tutor.subjects.map((subject) {
+                      children: tutor.subjects.map((subject) {
                         return Container(
-                          padding:
-                              const EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: primaryColor
-                                .withOpacity(0.10),
+                            color:
+                                primaryColor.withValues(alpha: 0.10),
                             borderRadius:
                                 BorderRadius.circular(10),
                           ),
@@ -221,8 +217,7 @@ class TutorProfileScreen extends StatelessWidget {
                             style: const TextStyle(
                               color: primaryColor,
                               fontSize: 13,
-                              fontWeight:
-                                  FontWeight.w600,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         );
@@ -251,32 +246,28 @@ class TutorProfileScreen extends StatelessWidget {
                         spacing: 7,
                         runSpacing: 7,
                         children:
-                            tutor.availableDays.map(
-                          (day) {
-                            return Container(
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 7,
+                            tutor.availableDays.map((day) {
+                          return Container(
+                            padding:
+                                const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  Colors.grey.withValues(alpha: 0.08),
+                              borderRadius:
+                                  BorderRadius.circular(9),
+                            ),
+                            child: Text(
+                              day,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey
-                                    .withOpacity(0.08),
-                                borderRadius:
-                                    BorderRadius.circular(
-                                        9),
-                              ),
-                              child: Text(
-                                day,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight:
-                                      FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          },
-                        ).toList(),
+                            ),
+                          );
+                        }).toList(),
                       ),
 
                     if (tutor.availableFrom.isNotEmpty &&
@@ -285,7 +276,7 @@ class TutorProfileScreen extends StatelessWidget {
 
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.access_time_rounded,
                             size: 19,
                             color: primaryColor,
@@ -295,8 +286,7 @@ class TutorProfileScreen extends StatelessWidget {
                             '${tutor.availableFrom} - ${tutor.availableTo}',
                             style: const TextStyle(
                               fontSize: 14,
-                              fontWeight:
-                                  FontWeight.w600,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -320,8 +310,7 @@ class TutorProfileScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          BookingScreen(
+                      builder: (context) => BookingScreen(
                         tutor: tutor,
                       ),
                     ),
@@ -332,8 +321,7 @@ class TutorProfileScreen extends StatelessWidget {
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                 ),
                 child: const Row(
@@ -390,7 +378,7 @@ class _InfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -405,9 +393,8 @@ class _InfoCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.10),
-                  borderRadius:
-                      BorderRadius.circular(11),
+                  color: primaryColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(11),
                 ),
                 child: Icon(
                   icon,
@@ -437,4 +424,3 @@ class _InfoCard extends StatelessWidget {
     );
   }
 }
-

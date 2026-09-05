@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -57,7 +56,6 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -70,7 +68,6 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
           ),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
         child: Column(
@@ -83,7 +80,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -155,7 +152,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.10),
+                        color: primaryColor.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -253,7 +250,7 @@ class _TutorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -265,7 +262,7 @@ class _TutorCard extends StatelessWidget {
           // Profile picture
           CircleAvatar(
             radius: 30,
-            backgroundColor: primaryColor.withOpacity(0.10),
+            backgroundColor: primaryColor.withValues(alpha: 0.10),
             backgroundImage: tutor.photoUrl.isNotEmpty
                 ? NetworkImage(tutor.photoUrl)
                 : null,
@@ -419,7 +416,7 @@ class _EmptyState extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: const Color(0xFF4F46E5).withOpacity(0.10),
+                color: const Color(0xFF4F46E5).withValues(alpha: 0.10),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -508,4 +505,3 @@ class _ErrorState extends StatelessWidget {
     );
   }
 }
-

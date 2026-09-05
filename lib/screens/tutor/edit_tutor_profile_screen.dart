@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -590,7 +589,7 @@ class _EditTutorProfileScreenState
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.10),
+            color: primaryColor.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -687,7 +686,7 @@ class _EditTutorProfileScreenState
                       boxShadow: [
                         BoxShadow(
                           color:
-                              Colors.black.withOpacity(0.04),
+                              Colors.black.withValues(alpha: 0.04),
                           blurRadius: 12,
                           offset:
                               const Offset(0, 4),
@@ -706,7 +705,7 @@ class _EditTutorProfileScreenState
                                 radius: 58,
                                 backgroundColor:
                                     primaryColor
-                                        .withOpacity(0.10),
+                                        .withValues(alpha: 0.10),
                                 backgroundImage:
                                     _photoUrl.isNotEmpty
                                         ? NetworkImage(
@@ -999,7 +998,7 @@ class _EditTutorProfileScreenState
                                   ),
                           backgroundColor:
                               primaryColor
-                                  .withOpacity(0.10),
+                                  .withValues(alpha: 0.10),
                           side: BorderSide.none,
                           shape:
                               RoundedRectangleBorder(
@@ -1051,7 +1050,7 @@ class _EditTutorProfileScreenState
                                 _toggleDay(day),
                         selectedColor:
                             primaryColor
-                                .withOpacity(0.15),
+                                .withValues(alpha: 0.15),
                         checkmarkColor:
                             primaryColor,
                         labelStyle: TextStyle(
@@ -1067,7 +1066,7 @@ class _EditTutorProfileScreenState
                         side: BorderSide(
                           color: selected
                               ? primaryColor
-                                  .withOpacity(0.30)
+                                  .withValues(alpha: 0.30)
                               : Colors.grey.shade300,
                         ),
                         shape:
@@ -1123,7 +1122,7 @@ class _EditTutorProfileScreenState
                             ),
                             side: BorderSide(
                               color: primaryColor
-                                  .withOpacity(0.25),
+                                  .withValues(alpha: 0.25),
                             ),
                             shape:
                                 RoundedRectangleBorder(
@@ -1179,7 +1178,7 @@ class _EditTutorProfileScreenState
                             ),
                             side: BorderSide(
                               color: primaryColor
-                                  .withOpacity(0.25),
+                                  .withValues(alpha: 0.25),
                             ),
                             shape:
                                 RoundedRectangleBorder(
@@ -1288,4 +1287,3 @@ class _EditTutorProfileScreenState
     );
   }
 }
-

@@ -126,7 +126,7 @@ class MySessionsScreen extends StatelessWidget {
                       height: 90,
                       width: 90,
                       decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.10),
+                        color: primaryColor.withValues(alpha: 0.10),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -176,9 +176,7 @@ class MySessionsScreen extends StatelessWidget {
                   color: Color(0xFF1F2937),
                 ),
               ),
-
               const SizedBox(height: 6),
-
               Text(
                 '${sessions.length} session${sessions.length == 1 ? '' : 's'}',
                 style: TextStyle(
@@ -186,9 +184,7 @@ class MySessionsScreen extends StatelessWidget {
                   color: Colors.grey.shade600,
                 ),
               ),
-
               const SizedBox(height: 20),
-
               ...sessions.map(
                 (session) => Padding(
                   padding: const EdgeInsets.only(bottom: 14),
@@ -269,7 +265,7 @@ class _SessionCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -288,7 +284,7 @@ class _SessionCard extends StatelessWidget {
                   height: 52,
                   width: 52,
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.10),
+                    color: primaryColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: const Icon(
@@ -297,9 +293,7 @@ class _SessionCard extends StatelessWidget {
                     size: 28,
                   ),
                 ),
-
                 const SizedBox(width: 13),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment:
@@ -332,7 +326,7 @@ class _SessionCard extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.10),
+                    color: statusColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -400,8 +394,8 @@ class _SessionCard extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isPaid
-                    ? Colors.green.withOpacity(0.07)
-                    : Colors.orange.withOpacity(0.08),
+                    ? Colors.green.withValues(alpha: 0.07)
+                    : Colors.orange.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -545,7 +539,7 @@ class _InfoItem extends StatelessWidget {
             height: 36,
             width: 36,
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.10),
+              color: primaryColor.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
