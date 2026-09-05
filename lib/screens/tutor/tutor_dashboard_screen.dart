@@ -17,15 +17,59 @@ class TutorDashboardScreen extends StatefulWidget {
 class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
   final _service = TutorService();
 
+  late final Stream<List<Booking>> _requestsStream;
+  late final Stream<List<Booking>> _upcomingStream;
+  late final Stream<List<Booking>> _historyStream;
+  late final Stream<List<Review>> _reviewsStream;
+
+  // ============================================================
+  // UI COLORS
+  // ============================================================
+
+  static const Color primaryColor = Color(0xFF4F46E5);
+  static const Color backgroundColor = Color(0xFFF7F8FC);
+  static const Color textColor = Color(0xFF1F2937);
+  static const Color secondaryTextColor = Color(0xFF6B7280);
+  static const Color cardColor = Colors.white;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _requestsStream = _service.watchIncomingRequests();
+    _upcomingStream = _service.watchUpcomingSessions();
+    _historyStream = _service.watchSessionHistory();
+    _reviewsStream = _service.watchMyReviews();
+  }
+
+  bool _hasPaymentTerms(Booking session) {
+    return session.paymentType != PaymentType.none ||
+        session.amount > 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Tutor Dashboard'),
+        backgroundColor: backgroundColor,
 
-          // Logout button
+        // ======================================================
+        // APP BAR
+        // ======================================================
+
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          title: const Text(
+            'Tutor Dashboard',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+
           actions: [
             IconButton(
               icon: const Icon(Icons.account_balance_wallet_outlined),
@@ -34,7 +78,8 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const TutorEarningsScreen(),
+                    builder: (context) =>
+                        const TutorEarningsScreen(),
                   ),
                 );
               },
@@ -47,7 +92,8 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const EditTutorProfileScreen(),
+                    builder: (context) =>
+                        const EditTutorProfileScreen(),
                   ),
                 );
               },
@@ -60,22 +106,47 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                 await FirebaseAuth.instance.signOut();
 
                 if (context.mounted) {
-                  Navigator.pushReplacementNamed(context, '/login');
+                  Navigator.pushReplacementNamed(
+                    context,
+                    '/login',
+                  );
                 }
               },
             ),
+
+            const SizedBox(width: 6),
           ],
 
           bottom: const TabBar(
             isScrollable: true,
+            indicatorColor: Colors.white,
+            indicatorWeight: 3,
+            labelColor: Colors.white,
+            unselectedLabelColor: Color(0xFFDDE1FF),
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
             tabs: [
-              Tab(text: 'Requests'),
-              Tab(text: 'Upcoming'),
-              Tab(text: 'History'),
-              Tab(text: 'Feedback'),
+              Tab(
+                icon: Icon(Icons.inbox_outlined),
+                text: 'Requests',
+              ),
+              Tab(
+                icon: Icon(Icons.calendar_month_outlined),
+                text: 'Upcoming',
+              ),
+              Tab(
+                icon: Icon(Icons.history),
+                text: 'History',
+              ),
+              Tab(
+                icon: Icon(Icons.star_outline),
+                text: 'Feedback',
+              ),
             ],
           ),
         ),
+
         body: TabBarView(
           children: [
             _buildRequests(),
@@ -88,78 +159,187 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     );
   }
 
-  // ------------------------------------------------------------
-  // Requests tab
-  // ------------------------------------------------------------
+  // ============================================================
+  // REQUESTS
+  // ============================================================
 
   Widget _buildRequests() {
     return StreamBuilder<List<Booking>>(
-      stream: _service.watchIncomingRequests(),
+      stream: _requestsStream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(
+              color: primaryColor,
+            ),
+          );
         }
 
         if (snap.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                'Failed to load requests:\n\n${snap.error}',
-                textAlign: TextAlign.center,
-              ),
-            ),
+          return _errorState(
+            'Failed to load requests',
+            snap.error.toString(),
           );
         }
 
         final requests = snap.data ?? [];
 
         if (requests.isEmpty) {
-          return const Center(child: Text('No pending requests'));
+          return _emptyState(
+            icon: Icons.inbox_outlined,
+            title: 'No Pending Requests',
+            subtitle: 'New student requests will appear here.',
+          );
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.all(16),
           itemCount: requests.length,
           itemBuilder: (context, i) {
             final b = requests[i];
 
-            return Card(
-              margin: const EdgeInsets.all(8),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: _cardDecoration(),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${b.studentName} • ${b.subject}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        _avatar(
+                          Icons.person,
+                          primaryColor,
+                        ),
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                b.studentName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                b.subject,
+                                style: const TextStyle(
+                                  color:
+                                      secondaryTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        _statusChip(
+                          'Pending',
+                          Colors.orange,
+                        ),
+                      ],
                     ),
-                    Text(
+
+                    const SizedBox(height: 16),
+
+                    _infoRow(
+                      Icons.calendar_today_outlined,
                       '${b.date.toLocal().toString().split(' ')[0]}  ${b.time}',
                     ),
-                    Text('Type: ${b.sessionType.name}'),
-
-                    if (b.studentMessage.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          '"${b.studentMessage}"',
-                          style: const TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                      ),
 
                     const SizedBox(height: 8),
 
+                    _infoRow(
+                      Icons.video_camera_front_outlined,
+                      b.sessionType.name,
+                    ),
+
+                    if (b.studentMessage.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius:
+                              BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '"${b.studentMessage}"',
+                          style: const TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: secondaryTextColor,
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 16),
+
                     Row(
                       children: [
-                        ElevatedButton(
-                          onPressed: () => _handleAccept(b),
-                          child: const Text('Accept'),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () =>
+                                _handleAccept(b),
+                            icon: const Icon(
+                              Icons.check,
+                              size: 18,
+                            ),
+                            label: const Text('Accept'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding:
+                                  const EdgeInsets.symmetric(
+                                vertical: 13,
+                              ),
+                              shape:
+                                  RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          onPressed: () => _handleDecline(b),
-                          child: const Text('Deny'),
+
+                        const SizedBox(width: 10),
+
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () =>
+                                _handleDecline(b),
+                            icon: const Icon(
+                              Icons.close,
+                              size: 18,
+                            ),
+                            label: const Text('Deny'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor:
+                                  Colors.red.shade600,
+                              side: BorderSide(
+                                color: Colors.red.shade200,
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(
+                                vertical: 13,
+                              ),
+                              shape:
+                                  RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -173,26 +353,49 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     );
   }
 
+  // ============================================================
+  // ACCEPT
+  // ============================================================
+
   Future<void> _handleAccept(Booking b) async {
     final msgController = TextEditingController();
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Accept request'),
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        title: const Text(
+          'Accept Request',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: TextField(
           controller: msgController,
-          decoration: const InputDecoration(
-            labelText: 'Message for student (optional)',
+          decoration: InputDecoration(
+            labelText: 'Message for student',
+            hintText: 'Optional message',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () =>
+                Navigator.of(dialogCtx).pop(false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () =>
+                Navigator.of(dialogCtx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Accept'),
           ),
         ],
@@ -212,88 +415,152 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
       }
     } finally {
       msgController.dispose();
     }
   }
 
+  // ============================================================
+  // DECLINE
+  // ============================================================
+
   Future<void> _handleDecline(Booking b) async {
     try {
-      await _service.respondToBooking(bookingId: b.id, accept: false);
+      await _service.respondToBooking(
+        bookingId: b.id,
+        accept: false,
+      );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
       }
     }
   }
 
-  // ------------------------------------------------------------
-  // Upcoming tab
-  // ------------------------------------------------------------
+  // ============================================================
+  // UPCOMING
+  // ============================================================
 
   Widget _buildUpcoming() {
     return StreamBuilder<List<Booking>>(
-      stream: _service.watchUpcomingSessions(),
+      stream: _upcomingStream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(
+              color: primaryColor,
+            ),
+          );
         }
 
         if (snap.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                'Failed to load upcoming sessions:\n\n${snap.error}',
-                textAlign: TextAlign.center,
-              ),
-            ),
+          return _errorState(
+            'Failed to load upcoming sessions',
+            snap.error.toString(),
           );
         }
 
         final sessions = snap.data ?? [];
 
         if (sessions.isEmpty) {
-          return const Center(child: Text('No upcoming sessions'));
+          return _emptyState(
+            icon: Icons.calendar_month_outlined,
+            title: 'No Upcoming Sessions',
+            subtitle:
+                'Accepted sessions will appear here.',
+          );
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.all(16),
           itemCount: sessions.length,
           itemBuilder: (context, i) {
             final s = sessions[i];
 
-            return Card(
-              margin: const EdgeInsets.all(8),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: _cardDecoration(),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${s.subject} • ${s.studentName}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                    Row(
+                      children: [
+                        _avatar(
+                          Icons.school_outlined,
+                          primaryColor,
+                        ),
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                s.subject,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                s.studentName,
+                                style: const TextStyle(
+                                  color:
+                                      secondaryTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        _statusChip(
+                          'Accepted',
+                          Colors.green,
+                        ),
+                      ],
                     ),
 
-                    const SizedBox(height: 6),
+                    if (s.sessionType ==
+                        SessionType.monthly) ...[
+                      const SizedBox(height: 14),
 
-                    if (s.sessionType == SessionType.monthly)
-                      Text(
-                        'Session ${s.sessionNumber} of ${s.sessionsExpected}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      Container(
+                        padding:
+                            const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius:
+                              BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Session ${s.sessionNumber} of ${s.sessionsExpected}',
+                          style: const TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
+                    ],
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 14),
 
-                    Text(
+                    _infoRow(
+                      Icons.calendar_today_outlined,
                       '${s.date.toLocal().toString().split(' ')[0]}  ${s.time}',
                     ),
 
@@ -301,49 +568,91 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
 
                     Row(
                       children: [
-                        const Text(
-                          'Status: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        const Icon(
+                          Icons.payments_outlined,
+                          size: 19,
+                          color: secondaryTextColor,
                         ),
-                        const Chip(label: Text('Accepted')),
-                      ],
-                    ),
-
-                    Row(
-                      children: [
+                        const SizedBox(width: 8),
                         const Text(
-                          'Payment: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Chip(
-                          label: Text(
-                            s.paymentStatus == PaymentStatus.paid
-                                ? 'Paid'
-                                : 'Unpaid',
+                          'Payment:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        _statusChip(
+                          s.paymentStatus ==
+                                  PaymentStatus.paid
+                              ? 'Paid'
+                              : 'Unpaid',
+                          s.paymentStatus ==
+                                  PaymentStatus.paid
+                              ? Colors.green
+                              : Colors.orange,
+                        ),
                       ],
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 16),
 
-                    // Mark Completed button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () => _handleCompleteSession(s),
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: const Text('Mark Session Completed'),
+                        onPressed: () =>
+                            _handleCompleteSession(s),
+                        icon: const Icon(
+                          Icons.check_circle_outline,
+                        ),
+                        label:
+                            const Text('Mark Session Completed'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding:
+                              const EdgeInsets.symmetric(
+                            vertical: 13,
+                          ),
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+
+                    const SizedBox(height: 10),
 
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () => _handleAddPayment(s),
-                        icon: const Icon(Icons.payments_outlined),
-                        label: const Text('Add Payment Terms'),
+                        onPressed: _hasPaymentTerms(s)
+                            ? null
+                            : () => _handleAddPayment(s),
+                        icon: Icon(
+                          _hasPaymentTerms(s)
+                              ? Icons.check_circle_outline
+                              : Icons.payments_outlined,
+                        ),
+                        label: Text(
+                          _hasPaymentTerms(s)
+                              ? 'Payment Terms Added'
+                              : 'Add Payment Terms',
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding:
+                              const EdgeInsets.symmetric(
+                            vertical: 13,
+                          ),
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -356,192 +665,159 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     );
   }
 
-  Future<void> _handleCompleteSession(Booking session) async {
+  // ============================================================
+  // COMPLETE SESSION
+  // ============================================================
+
+  Future<void> _handleCompleteSession(
+    Booking session,
+  ) async {
     try {
-      await _service.markSessionCompleted(bookingId: session.id);
+      await _service.markSessionCompleted(
+        bookingId: session.id,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Session marked as completed.')),
+          const SnackBar(
+            content:
+                Text('Session marked as completed.'),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to complete session: $e')),
+          SnackBar(
+            content:
+                Text('Failed to complete session: $e'),
+          ),
         );
       }
     }
   }
 
-  Future<void> _handleAddPayment(Booking session) async {
-    final amountController = TextEditingController();
+  // ============================================================
+  // PAYMENT
+  // ============================================================
 
-    PaymentType selectedType = PaymentType.perSession;
-    String? errorText;
-
-    final result = await showDialog<bool>(
+  Future<void> _handleAddPayment(
+    Booking session,
+  ) async {
+    final result =
+        await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Add Payment Terms'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<PaymentType>(
-                      initialValue: selectedType,
-                      decoration: const InputDecoration(
-                        labelText: 'Payment Type',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: PaymentType.perSession,
-                          child: Text('Per Session'),
-                        ),
-                        DropdownMenuItem(
-                          value: PaymentType.monthlyContract,
-                          child: Text('Monthly Contract'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value == null) return;
-
-                        setDialogState(() {
-                          selectedType = value;
-                        });
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextField(
-                      controller: amountController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'Amount',
-                        hintText: 'e.g. 1000',
-                        prefixText: 'Rs. ',
-                        border: const OutlineInputBorder(),
-                        errorText: errorText,
-                      ),
-                    ),
-
-                    if (selectedType == PaymentType.monthlyContract) ...[
-                      const SizedBox(height: 12),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Monthly contract: 4 sessions over 28 days.',
-                          style: TextStyle(fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(dialogContext, false);
-                  },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final amount = double.tryParse(
-                      amountController.text.trim(),
-                    );
-
-                    if (amount == null || amount <= 0) {
-                      setDialogState(() {
-                        errorText = 'Please enter a valid amount.';
-                      });
-                      return;
-                    }
-
-                    Navigator.pop(dialogContext, true);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      useRootNavigator: true,
+      builder: (dialogCtx) =>
+          const _AddPaymentTermsDialog(),
     );
 
-    final amount = double.tryParse(amountController.text.trim());
+    if (result == null || !mounted) return;
 
-    amountController.dispose();
+    final PaymentType paymentType =
+        result['paymentType'];
 
-    if (result != true || amount == null) {
-      return;
-    }
+    final double amount = result['amount'];
 
     try {
       await _service.setPaymentTerms(
         bookingId: session.id,
-        paymentType: selectedType,
+        paymentType: paymentType,
         amount: amount,
       );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment terms saved successfully.')),
+        const SnackBar(
+          content:
+              Text('Payment terms saved successfully.'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save payment terms: $e')),
+        SnackBar(
+          content:
+              Text('Failed to save payment terms: $e'),
+        ),
       );
     }
   }
-  // ------------------------------------------------------------
-  // History tab
-  // ------------------------------------------------------------
+
+  // ============================================================
+  // HISTORY
+  // ============================================================
 
   Widget _buildHistory() {
     return StreamBuilder<List<Booking>>(
-      stream: _service.watchSessionHistory(),
+      stream: _historyStream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(
+              color: primaryColor,
+            ),
+          );
         }
 
         if (snap.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                'Failed to load history:\n\n${snap.error}',
-                textAlign: TextAlign.center,
-              ),
-            ),
+          return _errorState(
+            'Failed to load history',
+            snap.error.toString(),
           );
         }
 
         final sessions = snap.data ?? [];
 
         if (sessions.isEmpty) {
-          return const Center(child: Text('No past sessions yet'));
+          return _emptyState(
+            icon: Icons.history,
+            title: 'No Past Sessions',
+            subtitle:
+                'Completed sessions will appear here.',
+          );
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.all(16),
           itemCount: sessions.length,
           itemBuilder: (context, i) {
             final s = sessions[i];
 
-            return ListTile(
-              title: Text('${s.subject} • ${s.studentName}'),
-              subtitle: Text(s.status.name),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: _cardDecoration(),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.all(14),
+                leading: _avatar(
+                  Icons.school_outlined,
+                  primaryColor,
+                ),
+                title: Text(
+                  '${s.subject} • ${s.studentName}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                subtitle: Padding(
+                  padding:
+                      const EdgeInsets.only(top: 6),
+                  child: Text(
+                    s.status.name,
+                    style: const TextStyle(
+                      color: secondaryTextColor,
+                    ),
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: secondaryTextColor,
+                ),
+              ),
             );
           },
         );
@@ -549,65 +825,489 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     );
   }
 
-  // ------------------------------------------------------------
-  // Feedback tab
-  // ------------------------------------------------------------
+  // ============================================================
+  // FEEDBACK
+  // ============================================================
 
   Widget _buildFeedback() {
     return StreamBuilder<List<Review>>(
-      stream: _service.watchMyReviews(),
+      stream: _reviewsStream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(
+              color: primaryColor,
+            ),
+          );
         }
 
         if (snap.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                'Failed to load feedback:\n\n${snap.error}',
-                textAlign: TextAlign.center,
-              ),
-            ),
+          return _errorState(
+            'Failed to load feedback',
+            snap.error.toString(),
           );
         }
 
         final reviews = snap.data ?? [];
 
         if (reviews.isEmpty) {
-          return const Center(child: Text('No feedback yet'));
+          return _emptyState(
+            icon: Icons.star_outline,
+            title: 'No Feedback Yet',
+            subtitle:
+                'Student reviews will appear here.',
+          );
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.all(16),
           itemCount: reviews.length,
           itemBuilder: (context, i) {
             final r = reviews[i];
 
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: ListTile(
-                title: Row(
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: _cardDecoration(),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: Text(r.studentName)),
                     Row(
-                      children: List.generate(
-                        5,
-                        (idx) => Icon(
-                          idx < r.rating ? Icons.star : Icons.star_border,
-                          size: 16,
-                          color: Colors.amber,
+                      children: [
+                        _avatar(
+                          Icons.person,
+                          primaryColor,
+                        ),
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: Text(
+                            r.studentName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                        ),
+
+                        Row(
+                          children: List.generate(
+                            5,
+                            (idx) => Icon(
+                              idx < r.rating
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              size: 18,
+                              color: Colors.amber,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    if (r.comment.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+
+                      Container(
+                        width: double.infinity,
+                        padding:
+                            const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBEB),
+                          borderRadius:
+                              BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '"${r.comment}"',
+                          style: const TextStyle(
+                            color: textColor,
+                            height: 1.4,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
-                subtitle: Text(r.comment),
               ),
             );
           },
         );
       },
+    );
+  }
+
+  // ============================================================
+  // UI HELPERS
+  // ============================================================
+
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.04),
+          blurRadius: 10,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    );
+  }
+
+  Widget _avatar(
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        color: color,
+        size: 23,
+      ),
+    );
+  }
+
+  Widget _infoRow(
+    IconData icon,
+    String text,
+  ) {
+    return Row(
+      children: [
+        const SizedBox(width: 2),
+        Icon(
+          icon,
+          size: 18,
+          color: secondaryTextColor,
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: secondaryTextColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statusChip(
+    String text,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color:
+                    primaryColor.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.inbox_outlined,
+                size: 38,
+                color: primaryColor,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: secondaryTextColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _errorState(
+    String title,
+    String error,
+  ) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 55,
+              color: Colors.redAccent,
+            ),
+
+            const SizedBox(height: 15),
+
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              error,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: secondaryTextColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// ADD PAYMENT TERMS DIALOG
+// UI ONLY REDESIGNED
+// ============================================================
+
+class _AddPaymentTermsDialog extends StatefulWidget {
+  const _AddPaymentTermsDialog();
+
+  @override
+  State<_AddPaymentTermsDialog> createState() =>
+      _AddPaymentTermsDialogState();
+}
+
+class _AddPaymentTermsDialogState
+    extends State<_AddPaymentTermsDialog> {
+  late final TextEditingController _amountController;
+
+  PaymentType _selectedType =
+      PaymentType.perSession;
+
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController =
+        TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _onSave() {
+    final amount =
+        double.tryParse(_amountController.text.trim());
+
+    if (amount == null || amount <= 0) {
+      setState(() {
+        _errorText =
+            'Please enter a valid amount.';
+      });
+      return;
+    }
+
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pop({
+      'paymentType': _selectedType,
+      'amount': amount,
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+
+      title: const Row(
+        children: [
+          Icon(
+            Icons.payments_outlined,
+            color:
+                _TutorDashboardScreenState.primaryColor,
+          ),
+          SizedBox(width: 10),
+          Text(
+            'Payment Terms',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<PaymentType>(
+              initialValue: _selectedType,
+              decoration: InputDecoration(
+                labelText: 'Payment Type',
+                prefixIcon: const Icon(
+                  Icons.category_outlined,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(12),
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: PaymentType.perSession,
+                  child: Text('Per Session'),
+                ),
+                DropdownMenuItem(
+                  value: PaymentType.monthlyContract,
+                  child: Text('Monthly Contract'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+
+                setState(() {
+                  _selectedType = value;
+                });
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: _amountController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: InputDecoration(
+                labelText: 'Amount',
+                hintText: 'e.g. 1000',
+                prefixText: 'Rs. ',
+                prefixIcon: const Icon(
+                  Icons.currency_exchange,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(12),
+                ),
+                errorText: _errorText,
+              ),
+            ),
+
+            if (_selectedType ==
+                PaymentType.monthlyContract) ...[
+              const SizedBox(height: 12),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius:
+                      BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'Monthly contract: 4 sessions over 28 days.',
+                  style: TextStyle(
+                    color:
+                        _TutorDashboardScreenState
+                            .primaryColor,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+
+      actions: [
+        TextButton(
+          onPressed: () =>
+              Navigator.of(
+                context,
+                rootNavigator: true,
+              ).pop(),
+          child: const Text('Cancel'),
+        ),
+
+        ElevatedButton(
+          onPressed: _onSave,
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                _TutorDashboardScreenState.primaryColor,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }
