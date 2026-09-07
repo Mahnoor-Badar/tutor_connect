@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 class EarningsService {
   final _db = FirebaseFirestore.instance;
@@ -31,12 +32,22 @@ class EarningsService {
   // CURRENT MONTH EARNINGS
   // ============================================================
 
-  Future<double> getMonthlyEarnings() async {
+ Future<double> getMonthlyEarnings() async {
+  debugPrint('=== MONTHLY EARNINGS FUNCTION STARTED ===');
+  try {
     final now = DateTime.now();
 
-    final startOfMonth = DateTime(now.year, now.month, 1);
+    final startOfMonth = DateTime(
+      now.year,
+      now.month,
+      1,
+    );
 
-    final startTimestamp = Timestamp.fromDate(startOfMonth);
+    final startOfNextMonth = DateTime(
+      now.year,
+      now.month + 1,
+      1,
+    );
 
     final snapshot = await _db
         .collection('transactions')
@@ -44,7 +55,11 @@ class EarningsService {
         .where('status', isEqualTo: 'paid')
         .where(
           'createdAt',
-          isGreaterThanOrEqualTo: startTimestamp,
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth),
+        )
+        .where(
+          'createdAt',
+          isLessThan: Timestamp.fromDate(startOfNextMonth),
         )
         .get();
 
@@ -52,12 +67,20 @@ class EarningsService {
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
-      total += (data['amount'] ?? 0).toDouble();
+      final amount = data['amount'];
+
+      if (amount is num) {
+        total += amount.toDouble();
+      }
     }
 
     return total;
+  } catch (e) {
+    debugPrint('MONTHLY EARNINGS ERROR: $e');
+    return 0;
   }
-
+}
+  
   // ============================================================
   // TOTAL STUDENTS
   // ============================================================

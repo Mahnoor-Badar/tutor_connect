@@ -813,10 +813,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                     ),
                   ),
                 ),
-                trailing: const Icon(
-                  Icons.chevron_right,
-                  color: secondaryTextColor,
-                ),
+                
               ),
             );
           },
