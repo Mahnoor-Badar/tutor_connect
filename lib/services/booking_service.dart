@@ -128,4 +128,23 @@ class BookingService {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+  Future<void> validateAndBookSession({
+  required String tutorId,
+  required DateTime requestedDate,
+  required String requestedTimeSlot,
+}) async {
+  final tutorDoc = await FirebaseFirestore.instance.collection('tutors').doc(tutorId).get();
+  
+  if (!tutorDoc.exists) {
+    throw Exception('Tutor profile not found.');
+  }
+
+  final tutorData = tutorDoc.data()!;
+  final List<dynamic> availableSlots = tutorData['availableSlots'] ?? [];
+
+  // Verify if requestedTimeSlot matches tutor's availability
+  if (!availableSlots.contains(requestedTimeSlot)) {
+    throw Exception('Selected time slot is outside the tutor\'s available schedule.');
+  }
+}
 }
