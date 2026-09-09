@@ -14,11 +14,11 @@ class OpenRouterService {
     final response = await http.post(
       Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
       headers: {
-        'Authorization': 'Bearer $apiKey',
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey',
       },
       body: jsonEncode({
-        'model': 'openai/gpt-4o-mini',
+        'model': 'openrouter/free',
         'messages': [
           {
             'role': 'system',
@@ -33,10 +33,24 @@ class OpenRouterService {
       }),
     );
 
+    if (response.statusCode == 401) {
+      throw Exception('Invalid API key. Please check your OpenRouter API key.');
+    }
+
+    if (response.statusCode == 402) {
+      throw Exception('No credits available for this OpenRouter request.');
+    }
+
+    if (response.statusCode == 429) {
+      throw Exception('Too many requests. Please wait a moment and try again.');
+    }
+
+    if (response.statusCode >= 500) {
+      throw Exception('OpenRouter service is temporarily unavailable.');
+    }
+
     if (response.statusCode != 200) {
-      throw Exception(
-        'AI request failed: ${response.statusCode}\n${response.body}',
-      );
+      throw Exception('Unable to get a response from the AI.\n${response.body}');
     }
 
     final data = jsonDecode(response.body);
