@@ -16,7 +16,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
 
   String _searchText = '';
 
-  static const Color primaryColor = Color(0xFF4F46E5);
+  static const Color primaryColor = Color.fromARGB(255, 249, 253, 1);
   static const Color backgroundColor = Color(0xFFF7F7FC);
 
   @override
@@ -179,7 +179,7 @@ class _FindTutorScreenState extends State<FindTutorScreen> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                       child: CircularProgressIndicator(
-                        color: primaryColor,
+                        color: Color.fromARGB(255, 255, 251, 0),
                       ),
                     );
                   }
@@ -234,7 +234,7 @@ class _TutorCard extends StatelessWidget {
     required this.tutor,
   });
 
-  static const Color primaryColor = Color(0xFF4F46E5);
+  static const Color primaryColor = Color.fromARGB(255, 251, 255, 0);
 
   @override
   Widget build(BuildContext context) {
@@ -408,13 +408,13 @@ class _EmptyState extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: const Color(0xFF4F46E5).withValues(alpha: 0.10),
+                color: const Color.fromARGB(255, 252, 248, 20).withValues(alpha: 0.10),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.person_search_rounded,
                 size: 38,
-                color: Color(0xFF4F46E5),
+                color: Color.fromARGB(255, 221, 245, 5),
               ),
             ),
 
